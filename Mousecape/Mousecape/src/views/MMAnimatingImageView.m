@@ -16,10 +16,12 @@ const char MCInvalidateContext;
 @interface MMAnimatingImageView () <CALayerDelegate>
 @property (weak) MCSpriteLayer *spriteLayer;
 @property (weak) CALayer *hotSpotLayer;
+@property (nonatomic) BOOL isAnimationPaused;
 - (void)_initialize;
 - (void)_invalidateFrame;
 - (void)_invalidateAnimation;
 - (void)_resetTransform;
+- (void)_updateAppearance;
 - (void)registerTypes;
 - (void)_dragAnimationEnded:(id)sender;
 @end
@@ -51,34 +53,35 @@ const char MCInvalidateContext;
 
 - (void)_initialize {
     self.shouldAnimate = YES;
+    self.isAnimationPaused = NO;
 
     [self registerTypes];
-    
+
     self.layer = [[MCSpriteLayer alloc] init];
     self.wantsLayer = YES;
     self.layer.contentsGravity = kCAGravityCenter;
     self.layer.bounds = self.bounds;
     self.layer.autoresizingMask = kCALayerHeightSizable | kCALayerWidthSizable | kCALayerMinXMargin | kCALayerMinYMargin;
     self.layer.delegate = self;
-    
+
     CALayer *hotSpotLayer = [CALayer layer];
     hotSpotLayer.bounds = CGRectMake(0, 0, 3, 3);
-    hotSpotLayer.backgroundColor = [[NSColor redColor] CGColor];
+    hotSpotLayer.backgroundColor = [[NSColor systemRedColor] CGColor];
     hotSpotLayer.autoresizingMask = kCALayerNotSizable;
     hotSpotLayer.anchorPoint = CGPointMake(0.5, 0.5);
-    hotSpotLayer.borderColor = [[NSColor blackColor] CGColor];
+    hotSpotLayer.borderColor = [[NSColor labelColor] CGColor];
     hotSpotLayer.borderWidth = 0.5;
     [self.layer addSublayer:hotSpotLayer];
-    
+
     self.hotSpotLayer = hotSpotLayer;
     self.spriteLayer = (MCSpriteLayer *)self.layer;
 
     self.shouldShowHotSpot = NO;
     self.shouldAllowDragging = NO;
-    
+
     self.frameCount    = 1;
     self.frameDuration = 1;
-    
+
     [self addObserver:self forKeyPath:@"image" options:0 context:(void *)&MCInvalidateContext];
     [self addObserver:self forKeyPath:@"hotSpot" options:0 context:(void *)&MCInvalidateContext];
     [self addObserver:self forKeyPath:@"placeholderImage" options:0 context:(void *)&MCInvalidateContext];
@@ -86,6 +89,7 @@ const char MCInvalidateContext;
     [self addObserver:self forKeyPath:@"frameDuration" options:0 context:(void *)&MCInvalidateContext];
     [self addObserver:self forKeyPath:@"shouldAnimate" options:0 context:NULL];
     [self addObserver:self forKeyPath:@"shouldFlipHorizontally" options:0 context:NULL];
+    [self addObserver:self forKeyPath:@"effectiveAppearance" options:0 context:NULL];
 }
 
 - (void)dealloc {
@@ -96,6 +100,7 @@ const char MCInvalidateContext;
     [self removeObserver:self forKeyPath:@"frameDuration"];
     [self removeObserver:self forKeyPath:@"shouldAnimate"];
     [self removeObserver:self forKeyPath:@"shouldFlipHorizontally"];
+    [self removeObserver:self forKeyPath:@"effectiveAppearance"];
 }
 
 - (void)setNilValueForKey:(NSString *)key {
@@ -122,6 +127,8 @@ const char MCInvalidateContext;
         [self _invalidateAnimation];
     } else if ([keyPath isEqualToString:@"shouldFlipHorizontally"]) {
         [self _resetTransform];
+    } else if ([keyPath isEqualToString:@"effectiveAppearance"]) {
+        [self _updateAppearance];
     }
 }
 
@@ -136,6 +143,36 @@ const char MCInvalidateContext;
 
 - (void)viewDidMoveToWindow {
     [self _invalidateFrame];
+    [self _updateAppearance];
+}
+
+#pragma mark - Appearance
+
+- (void)_updateAppearance {
+    // Update colors for dark mode support
+    self.hotSpotLayer.backgroundColor = [[NSColor systemRedColor] CGColor];
+    self.hotSpotLayer.borderColor = [[NSColor labelColor] CGColor];
+}
+
+#pragma mark - Animation Pause/Resume for Performance
+
+- (void)pauseAnimation {
+    if (self.isAnimationPaused) return;
+    self.isAnimationPaused = YES;
+    CFTimeInterval pausedTime = [self.spriteLayer convertTime:CACurrentMediaTime() fromLayer:nil];
+    self.spriteLayer.speed = 0.0;
+    self.spriteLayer.timeOffset = pausedTime;
+}
+
+- (void)resumeAnimation {
+    if (!self.isAnimationPaused) return;
+    self.isAnimationPaused = NO;
+    CFTimeInterval pausedTime = self.spriteLayer.timeOffset;
+    self.spriteLayer.speed = 1.0;
+    self.spriteLayer.timeOffset = 0.0;
+    self.spriteLayer.beginTime = 0.0;
+    CFTimeInterval timeSincePause = [self.spriteLayer convertTime:CACurrentMediaTime() fromLayer:nil] - pausedTime;
+    self.spriteLayer.beginTime = timeSincePause;
 }
 
 + (NSSet *)keyPathsForValuesAffectingShouldShowHotSpot {

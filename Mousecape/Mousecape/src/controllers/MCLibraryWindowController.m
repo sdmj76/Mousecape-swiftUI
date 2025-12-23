@@ -12,17 +12,19 @@
     BOOL _accessoryComposed;
 }
 - (void)composeAccessory;
+- (void)configureWindowAppearance;
 @end
 
 @implementation MCLibraryWindowController
 
 - (void)awakeFromNib {
     [self composeAccessory];
+    [self configureWindowAppearance];
 }
 
 - (id)initWithWindow:(NSWindow *)window {
     if ((self = [super initWithWindow:window])) {
-        
+
     }
     return self;
 }
@@ -30,6 +32,28 @@
 - (void)windowDidLoad {
     [super windowDidLoad];
     [self composeAccessory];
+    [self configureWindowAppearance];
+}
+
+#pragma mark - Window Appearance
+
+- (void)configureWindowAppearance {
+    // Enable full size content view for modern window appearance
+    self.window.titlebarAppearsTransparent = NO;
+    self.window.titleVisibility = NSWindowTitleVisible;
+
+    // Add visual effect background for modern look
+    NSVisualEffectView *visualEffectView = [[NSVisualEffectView alloc] initWithFrame:self.window.contentView.bounds];
+    visualEffectView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+    visualEffectView.blendingMode = NSVisualEffectBlendingModeBehindWindow;
+    visualEffectView.material = NSVisualEffectMaterialSidebar;
+    visualEffectView.state = NSVisualEffectStateFollowsWindowActiveState;
+
+    // Insert as background
+    NSView *contentView = self.window.contentView;
+    NSArray *subviews = [contentView.subviews copy];
+    [visualEffectView setFrame:contentView.bounds];
+    [contentView addSubview:visualEffectView positioned:NSWindowBelow relativeTo:subviews.firstObject];
 }
 
 - (void)composeAccessory {

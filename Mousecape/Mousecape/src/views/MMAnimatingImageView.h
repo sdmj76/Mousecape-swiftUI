@@ -38,4 +38,10 @@
 @property (assign) BOOL shouldAnimate;
 @property (assign) BOOL shouldShowHotSpot;
 @property (assign) BOOL shouldAllowDragging;
+
+/// Pause animation for performance optimization (when view is off-screen)
+- (void)pauseAnimation;
+
+/// Resume animation when view becomes visible
+- (void)resumeAnimation;
 @end

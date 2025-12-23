@@ -59,12 +59,13 @@ const char MCLibraryNameContext;
 }
 
 - (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     [self.libraryController removeObserver:self forKeyPath:@"appliedCape"];
-    
+
     for (MCCursorLibrary *library in self.capes) {
         [library removeObserver:self forKeyPath:@"name" context:(void *)&MCLibraryNameContext];
     }
-    
+
 }
 
 + (NSString *)capesPath {
@@ -74,6 +75,12 @@ const char MCLibraryNameContext;
 - (void)awakeFromNib {
     self.tableView.doubleAction = @selector(doubleClick:);
     self.tableView.target       = self;
+
+    // Register for scroll notifications to optimize animation performance
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(scrollViewDidScroll:)
+                                                 name:NSViewBoundsDidChangeNotification
+                                               object:self.tableView.enclosingScrollView.contentView];
 }
 
 - (void)setupEnvironment {
@@ -208,5 +215,27 @@ const char MCLibraryNameContext;
 //- (NSTableRowView *)tableView:(NSTableView *)tableView rowViewForRow:(NSInteger)row {
 //    return nil;
 //}
+
+#pragma mark - Scroll Performance Optimization
+
+- (void)scrollViewDidScroll:(NSNotification *)notification {
+    [self updateVisibleCellAnimations];
+}
+
+- (void)updateVisibleCellAnimations {
+    NSRange visibleRows = [self.tableView rowsInRect:self.tableView.visibleRect];
+
+    for (NSInteger row = 0; row < self.tableView.numberOfRows; row++) {
+        MCCapeCellView *cellView = [self.tableView viewAtColumn:0 row:row makeIfNecessary:NO];
+        if (!cellView) continue;
+
+        BOOL isVisible = NSLocationInRange(row, visibleRows);
+        if (isVisible) {
+            [cellView resumeAnimations];
+        } else {
+            [cellView pauseAnimations];
+        }
+    }
+}
 
 @end

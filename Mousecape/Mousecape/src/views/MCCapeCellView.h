@@ -15,6 +15,12 @@
 @property IBOutlet NSImageView *appliedImageView;
 @property IBOutlet NSImageView *resolutionImageView;
 @property IBOutlet NSCollectionView *collectionView;
+
+/// Pause all cursor animations in this cell for performance
+- (void)pauseAnimations;
+
+/// Resume all cursor animations in this cell
+- (void)resumeAnimations;
 @end
 
 @interface MCHDValueTransformer : NSValueTransformer

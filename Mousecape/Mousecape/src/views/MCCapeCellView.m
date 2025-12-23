@@ -20,13 +20,36 @@
 - (void)viewDidMoveToWindow {
     self.collectionView.itemPrototype = [MCCapePreviewItem new];
     [self.collectionView bind:NSContentBinding toObject:self withKeyPath:@"objectValue.cursors" options:@{ NSValueTransformerBindingOption: [MCSortValueTransformer new] }];
-    
+
     self.collectionView.minItemSize = self.collectionView.itemPrototype.view.frame.size;
     self.collectionView.maxItemSize = self.collectionView.minItemSize;
 }
 
 - (void)dealloc {
     [self.collectionView unbind:NSContentBinding];
+}
+
+#pragma mark - Animation Performance Optimization
+
+- (void)prepareForReuse {
+    [super prepareForReuse];
+    [self resumeAnimations];
+}
+
+- (void)pauseAnimations {
+    for (NSCollectionViewItem *item in self.collectionView.visibleItems) {
+        if ([item.view isKindOfClass:[MMAnimatingImageView class]]) {
+            [(MMAnimatingImageView *)item.view pauseAnimation];
+        }
+    }
+}
+
+- (void)resumeAnimations {
+    for (NSCollectionViewItem *item in self.collectionView.visibleItems) {
+        if ([item.view isKindOfClass:[MMAnimatingImageView class]]) {
+            [(MMAnimatingImageView *)item.view resumeAnimation];
+        }
+    }
 }
 
 @end
