@@ -98,6 +98,19 @@ const char MCInvalidateContext;
     [self removeObserver:self forKeyPath:@"shouldFlipHorizontally"];
 }
 
+- (void)setNilValueForKey:(NSString *)key {
+    // Handle nil values for primitive types used in bindings
+    if ([key isEqualToString:@"frameCount"]) {
+        self.frameCount = 1;
+    } else if ([key isEqualToString:@"frameDuration"]) {
+        self.frameDuration = 1.0;
+    } else if ([key isEqualToString:@"hotSpot"]) {
+        self.hotSpot = NSZeroPoint;
+    } else {
+        [super setNilValueForKey:key];
+    }
+}
+
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
     if (context == &MCInvalidateContext) {
         if ([keyPath isEqualToString:@"image"] || [keyPath isEqualToString:@"placeholderImage"]) {

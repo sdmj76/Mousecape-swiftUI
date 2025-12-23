@@ -9,16 +9,20 @@
 #import "MCAppDelegate.h"
 #import <Security/Security.h>
 #import <ServiceManagement/ServiceManagement.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import "MCCursorLibrary.h"
 #import "create.h"
 #import "MASPreferencesWindowController.h"
 #import "MCGeneralPreferencesController.h"
+
+static NSString * const kHelperBundleIdentifier = @"com.alexzielenski.mousecloakhelper";
 
 @interface MCAppDelegate () {
     MASPreferencesWindowController *_preferencesWindowController;
 }
 @property (readonly) MASPreferencesWindowController *preferencesWindowController;
 - (void)configureHelperToolMenuItem;
+- (void)showAlertWithTitle:(NSString *)title message:(NSString *)message button:(NSString *)button;
 @end
 
 @implementation MCAppDelegate
@@ -32,7 +36,7 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     [self configureHelperToolMenuItem];
     [self.libraryWindowController showWindow:self];
-    
+
     // Re-apply currently applied cape
     if (self.libraryWindowController.libraryViewController.libraryController.appliedCape != NULL) {
         [self.libraryWindowController.libraryViewController.libraryController applyCape:self.libraryWindowController.libraryViewController.libraryController.appliedCape];
@@ -52,53 +56,64 @@
     return open;
 }
 
+#pragma mark - Helper Tool Management
+
+- (void)showAlertWithTitle:(NSString *)title message:(NSString *)message button:(NSString *)button {
+    NSAlert *alert = [[NSAlert alloc] init];
+    alert.messageText = title;
+    alert.informativeText = message;
+    [alert addButtonWithTitle:button];
+    [alert runModal];
+}
+
+- (BOOL)isHelperToolInstalled {
+    SMAppService *service = [SMAppService loginItemServiceWithIdentifier:kHelperBundleIdentifier];
+    return (service.status == SMAppServiceStatusEnabled);
+}
+
 - (void)configureHelperToolMenuItem {
-    CFDictionaryRef dict = SMJobCopyDictionary(kSMDomainUserLaunchd, CFSTR("com.alexzielenski.mousecloakhelper"));
-    
-    [self.toggleHelperItem setTag: dict ? 1 : 0];
-    [self.toggleHelperItem setTitle:self.toggleHelperItem.tag ?
+    BOOL installed = [self isHelperToolInstalled];
+
+    [self.toggleHelperItem setTag: installed ? 1 : 0];
+    [self.toggleHelperItem setTitle:installed ?
                     NSLocalizedString(@"Uninstall Helper Tool", "Uninstall Helper Tool Menu Item") :
                     NSLocalizedString(@"Install Helper Tool", "Install Helper Tool Menu Item")];
-    
-    if (dict)
-        CFRelease(dict);
 }
 
 - (IBAction)toggleInstall:(NSMenuItem *)sender {
     BOOL success = NO;
-    
-    if (self.toggleHelperItem.tag != 0) { // Uninstall
-        success = SMLoginItemSetEnabled(CFSTR("com.alexzielenski.mousecloakhelper"), false);
+    NSError *error = nil;
+    BOOL shouldInstall = (self.toggleHelperItem.tag == 0);
+
+    SMAppService *service = [SMAppService loginItemServiceWithIdentifier:kHelperBundleIdentifier];
+    if (shouldInstall) {
+        success = [service registerAndReturnError:&error];
     } else {
-        success = SMLoginItemSetEnabled(CFSTR("com.alexzielenski.mousecloakhelper"), true);
+        success = [service unregisterAndReturnError:&error];
     }
-    
-    // ServiceManagement.framework takes a while to actually register the job dictionary so if the return value is all good we
-    // can be on our merry way
-    if (success && self.toggleHelperItem.tag == 0) {
+
+    if (success && shouldInstall) {
         // Successfully Installed
         [self.toggleHelperItem setTag: 1];
         [self.toggleHelperItem setTitle:NSLocalizedString(@"Uninstall Helper Tool", "Uninstall Helper Tool Menu Item")];
-    
-        NSRunAlertPanel(NSLocalizedString(@"Sucess", "Helper Tool Install Result Title Success"),
-                        NSLocalizedString(@"The Mousecape helper was successfully installed", "Helper Tool Install Success Result useless description"),
-                        NSLocalizedString(@"Sweet", "Helper Tool Install Result Gratitude 1"),
-                        NSLocalizedString(@"Thanks", "Helper Tool Install Result Gratitude 2"), nil);
+
+        [self showAlertWithTitle:NSLocalizedString(@"Success", "Helper Tool Install Result Title Success")
+                         message:NSLocalizedString(@"The Mousecape helper was successfully installed", "Helper Tool Install Success Result useless description")
+                          button:NSLocalizedString(@"OK", "Helper Tool Install Result OK")];
     } else if (success) {
         // Successfully Uninstalled
         [self.toggleHelperItem setTag: 0];
         [self.toggleHelperItem setTitle:NSLocalizedString(@"Install Helper Tool", "Install Helper Tool Menu Item")];
-        
-        NSRunAlertPanel(NSLocalizedString(@"Sucess", "Helper Tool Uninstall Result Title Success"),
-                        NSLocalizedString(@"The Mousecape helper was successfully uninstalled", "Helper Tool Uninstall Success Result useless description"),
-                        NSLocalizedString(@"Sweet", "Helper Tool Uninstall Result Gratitude 1"),
-                        NSLocalizedString(@"Thanks", "Helper Tool Uninstall Result Gratitude 2"), nil);
+
+        [self showAlertWithTitle:NSLocalizedString(@"Success", "Helper Tool Uninstall Result Title Success")
+                         message:NSLocalizedString(@"The Mousecape helper was successfully uninstalled", "Helper Tool Uninstall Success Result useless description")
+                          button:NSLocalizedString(@"OK", "Helper Tool Uninstall Result OK")];
     } else {
-        NSRunAlertPanel(NSLocalizedString(@"Failure", "Helper Tool Result Title Failure"),
-                        NSLocalizedString(@"The action did not complete successfully", "Helper Tool Result Useless Failure Description"),
-                        NSLocalizedString(@"Fuck", "Helper Tool Result Failure Expletive"), nil, nil);
+        NSString *errorMessage = error ? error.localizedDescription : NSLocalizedString(@"The action did not complete successfully", "Helper Tool Result Useless Failure Description");
+        [self showAlertWithTitle:NSLocalizedString(@"Failure", "Helper Tool Result Title Failure")
+                         message:errorMessage
+                          button:NSLocalizedString(@"OK", "Helper Tool Result Failure OK")];
     }
-    
 }
 
 - (MASPreferencesWindowController *)preferencesWindowController {
@@ -119,11 +134,12 @@
 
 - (IBAction)convertCape:(id)sender {
     NSOpenPanel *panel = [NSOpenPanel openPanel];
-    panel.allowedFileTypes  = @[ @"MightyMouse" ];
+    UTType *mightyMouseType = [UTType typeWithFilenameExtension:@"MightyMouse"];
+    panel.allowedContentTypes = mightyMouseType ? @[mightyMouseType] : @[];
     panel.title             = NSLocalizedString(@"Import", "MightyMouse Import Panel Title");
     panel.message           = NSLocalizedString(@"Choose a MightyMouse file to import", "MightyMouse Import Panel useless description");
     panel.prompt            = NSLocalizedString(@"Import", "MightyMouse Import Panel Prompt");
-    if ([panel runModal] == NSFileHandlingPanelOKButton) {
+    if ([panel runModal] == NSModalResponseOK) {
         NSString *name = panel.URL.lastPathComponent.stringByDeletingPathExtension;
         NSDictionary *metadata = @{
                                    @"name": name,
@@ -144,11 +160,12 @@
 
 - (IBAction)openDocument:(id)sender {
     NSOpenPanel *panel = [NSOpenPanel openPanel];
-    panel.allowedFileTypes  = @[ @"cape" ];
+    UTType *capeType = [UTType typeWithFilenameExtension:@"cape"];
+    panel.allowedContentTypes = capeType ? @[capeType] : @[];
     panel.title             = NSLocalizedString(@"Import", "Mousecape Import Title");
     panel.message           = NSLocalizedString(@"Choose a Mousecape to import", "Mousecape Import useless description");
     panel.prompt            = NSLocalizedString(@"Import", "Mousecape Import Prompt");
-    if ([panel runModal] == NSFileHandlingPanelOKButton) {
+    if ([panel runModal] == NSModalResponseOK) {
         [self.libraryWindowController.libraryViewController.libraryController importCapeAtURL:panel.URL];
     }
 }

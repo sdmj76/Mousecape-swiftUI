@@ -8,7 +8,9 @@
 
 #import "MCLibraryWindowController.h"
 
-@interface MCLibraryWindowController ()
+@interface MCLibraryWindowController () {
+    BOOL _accessoryComposed;
+}
 - (void)composeAccessory;
 @end
 
@@ -26,41 +28,24 @@
 }
 
 - (void)windowDidLoad {
-    NSLog(@"window load");
     [super windowDidLoad];
     [self composeAccessory];
 }
 
-- (NSString *)windowNibName {
-    return @"Library";
-}
-
 - (void)composeAccessory {
-    NSView *themeFrame = [self.window.contentView superview];
+    if (_accessoryComposed) return;
+
     NSView *accessory = self.appliedAccessory;
-    [accessory setTranslatesAutoresizingMaskIntoConstraints:NO];
-    
-    NSRect c  = themeFrame.frame;
-    NSRect aV = accessory.frame;
-    NSRect newFrame = NSMakeRect(
-                                 c.size.width - aV.size.width,	// x position
-                                 c.size.height - aV.size.height,	// y position
-                                 aV.size.width,	// width
-                                 aV.size.height);	// height
-    
-    [accessory setFrame:newFrame];
-    [themeFrame addSubview:accessory];
-    
-    [themeFrame addConstraints:[NSLayoutConstraint
-                                constraintsWithVisualFormat:@"H:|-(>=100)-[accessory(245)]-(0)-|"
-                                options:0
-                                metrics:nil
-                                views:NSDictionaryOfVariableBindings(accessory)]];
-    [themeFrame addConstraints:[NSLayoutConstraint
-                                constraintsWithVisualFormat:@"V:|-(0)-[accessory(20)]-(>=22)-|"
-                                options:0
-                                metrics:nil
-                                views:NSDictionaryOfVariableBindings(accessory)]];
+    if (!accessory) return;
+
+    _accessoryComposed = YES;
+
+    // Use NSTitlebarAccessoryViewController for proper titlebar integration on modern macOS
+    NSTitlebarAccessoryViewController *accessoryVC = [[NSTitlebarAccessoryViewController alloc] init];
+    accessoryVC.view = accessory;
+    accessoryVC.layoutAttribute = NSLayoutAttributeRight;
+
+    [self.window addTitlebarAccessoryViewController:accessoryVC];
 }
 
 - (NSUndoManager *)windowWillReturnUndoManager:(NSWindow *)window {
@@ -112,10 +97,6 @@
         cape = self.libraryViewController.selectedCape;
     
     [self.libraryViewController.libraryController importCape:cape.copy];
-}
-
-- (IBAction)checkCapeAction:(NSMenuItem *)sender {
-    
 }
 
 - (IBAction)showCapeAction:(NSMenuItem *)sender {

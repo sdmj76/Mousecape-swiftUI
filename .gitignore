@@ -68,3 +68,4 @@ fastlane/test_output
 
 iOSInjectionProject/
 xcshareddata
+.DS_Store

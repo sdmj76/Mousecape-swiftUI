@@ -9,7 +9,9 @@
 #import "MCEditWindowController.h"
 #import "MCLibraryController.h"
 
-@interface MCEditWindowController ()
+@interface MCEditWindowController () {
+    MCCursorLibrary *_pendingLibrary;
+}
 - (void)_setCurrentViewController:(NSViewController *)vc;
 - (BOOL)promptSaveForLibrary:(MCCursorLibrary *)nextLibrary;
 @end
@@ -46,18 +48,19 @@
         self.editListController.cursorLibrary = nextLibrary;
         return NO;
     }
-    
-    NSBeginAlertSheet(
-                      NSLocalizedString(@"Do you want to save your changes?", "Save Prompt Title"),
-                      NSLocalizedString(@"Save", "Save Prompt Button"),
-                      NSLocalizedString(@"Cancel", "Save Prompt Button"),
-                      NSLocalizedString(@"Discard Changes", "Save Prompt Button"),
-                      self.window,
-                      self,
-                      NULL,
-                      @selector(sheetDidDismiss:returnCode:contextInfo:),
-                      (__bridge void *)nextLibrary,
-                      NSLocalizedString(@"Your changes will be discarded if you don't save them.", "Save prompt threat"));
+
+    _pendingLibrary = nextLibrary;
+
+    NSAlert *alert = [[NSAlert alloc] init];
+    alert.messageText = NSLocalizedString(@"Do you want to save your changes?", "Save Prompt Title");
+    alert.informativeText = NSLocalizedString(@"Your changes will be discarded if you don't save them.", "Save prompt threat");
+    [alert addButtonWithTitle:NSLocalizedString(@"Save", "Save Prompt Button")];
+    [alert addButtonWithTitle:NSLocalizedString(@"Cancel", "Save Prompt Button")];
+    [alert addButtonWithTitle:NSLocalizedString(@"Discard Changes", "Save Prompt Button")];
+
+    [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+        [self handleSaveAlertResponse:returnCode];
+    }];
     return YES;
 }
 
@@ -87,23 +90,26 @@
     return self.cursorLibrary.undoManager;
 }
 
-- (void)sheetDidDismiss:(NSWindow *)sheet returnCode:(NSInteger)returnCode contextInfo:(MCCursorLibrary *)contextInfo {
-    if (returnCode == 0) { // cancel
-       // do nothing
-    } else if (returnCode == 1) { // save
+- (void)handleSaveAlertResponse:(NSModalResponse)returnCode {
+    MCCursorLibrary *contextInfo = _pendingLibrary;
+    _pendingLibrary = nil;
+
+    if (returnCode == NSAlertSecondButtonReturn) { // Cancel
+        // do nothing
+    } else if (returnCode == NSAlertFirstButtonReturn) { // Save
         NSError *error = [self.cursorLibrary save];
         if (!error) {
             self.editListController.cursorLibrary = contextInfo;
-        
+
             if (!contextInfo)
                 [self.window close];
         } else {
             [NSApp presentError:error modalForWindow:self.window delegate:nil didPresentSelector:NULL contextInfo:nil];
         }
-    } else if (returnCode == -1) { // discard changes
+    } else if (returnCode == NSAlertThirdButtonReturn) { // Discard Changes
         [self.cursorLibrary revertToSaved];
         self.editListController.cursorLibrary = contextInfo;
-        
+
         if (!contextInfo)
             [self.window close];
     }
@@ -117,10 +123,6 @@
 
 - (IBAction)duplicateCape:(id)sender {
     [self.cursorLibrary.library importCape:self.cursorLibrary.copy];
-}
-
-- (IBAction)checkCape:(id)sender {
-    
 }
 
 - (IBAction)saveDocument:(id)sender {
