@@ -1,0 +1,19 @@
+// SwiftUI.xcconfig
+// Configuration for SwiftUI integration in Mousecape
+// Add this to your Xcode project build settings
+
+// Swift Language Version
+SWIFT_VERSION = 6.0
+
+// Bridging Header
+SWIFT_OBJC_BRIDGING_HEADER = Mousecape/Mousecape-Bridging-Header.h
+
+// Swift Optimization
+SWIFT_OPTIMIZATION_LEVEL[config=Debug] = -Onone
+SWIFT_OPTIMIZATION_LEVEL[config=Release] = -O
+
+// Enable Swift Interoperability
+SWIFT_OBJC_INTEROP_MODE = objcxx
+
+// Module Name
+PRODUCT_MODULE_NAME = Mousecape

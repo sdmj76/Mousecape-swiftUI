@@ -7,6 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		DE3661FC2EFAAAB600D94521 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = DE3661FA2EFAAAB600D94521 /* README.md */; };
+		DE3661FD2EFAAAB600D94521 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3661F52EFAAAB600D94521 /* MainView.swift */; };
+		DE3661FE2EFAAAB600D94521 /* EditOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3661F32EFAAAB600D94521 /* EditOverlayView.swift */; };
+		DE3661FF2EFAAAB600D94521 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3661EC2EFAAAB600D94521 /* AppState.swift */; };
+		DE3662002EFAAAB600D94521 /* CursorLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3661EE2EFAAAB600D94521 /* CursorLibrary.swift */; };
+		DE3662012EFAAAB600D94521 /* MousecapeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3661F92EFAAAB600D94521 /* MousecapeApp.swift */; };
+		DE3662022EFAAAB600D94521 /* CapeContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3661F12EFAAAB600D94521 /* CapeContextMenu.swift */; };
+		DE3662032EFAAAB600D94521 /* GlassEffectContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3661E92EFAAAB600D94521 /* GlassEffectContainer.swift */; };
+		DE3662042EFAAAB600D94521 /* MousecapeCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3661F62EFAAAB600D94521 /* MousecapeCommands.swift */; };
+		DE3662052EFAAAB600D94521 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3661F72EFAAAB600D94521 /* SettingsView.swift */; };
+		DE3662062EFAAAB600D94521 /* AnimatingCursorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3661E82EFAAAB600D94521 /* AnimatingCursorView.swift */; };
+		DE3662072EFAAAB600D94521 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3661F42EFAAAB600D94521 /* HomeView.swift */; };
+		DE3662082EFAAAB600D94521 /* CapePreviewPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3661F22EFAAAB600D94521 /* CapePreviewPanel.swift */; };
+		DE3662092EFAAAB600D94521 /* Cursor.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3661ED2EFAAAB600D94521 /* Cursor.swift */; };
+		DE36620A2EFAAAB600D94521 /* AppEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE3661EB2EFAAAB600D94521 /* AppEnums.swift */; };
+		DE36620B2EFAAAB600D94521 /* LocalizationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE36620C2EFAAAB600D94521 /* LocalizationManager.swift */; };
 		FA000001UTITYPES00000001 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA000001UTITYPES00000000 /* UniformTypeIdentifiers.framework */; };
 		FA04886C189F58B1001F3AB5 /* Edit.xib in Resources */ = {isa = PBXBuildFile; fileRef = FA048868189F58B1001F3AB5 /* Edit.xib */; };
 		FA04886D189F58B1001F3AB5 /* Library.xib in Resources */ = {isa = PBXBuildFile; fileRef = FA04886A189F58B1001F3AB5 /* Library.xib */; };
@@ -234,6 +250,23 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		DE3661E82EFAAAB600D94521 /* AnimatingCursorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatingCursorView.swift; sourceTree = "<group>"; };
+		DE3661E92EFAAAB600D94521 /* GlassEffectContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassEffectContainer.swift; sourceTree = "<group>"; };
+		DE3661EB2EFAAAB600D94521 /* AppEnums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnums.swift; sourceTree = "<group>"; };
+		DE3661EC2EFAAAB600D94521 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		DE3661ED2EFAAAB600D94521 /* Cursor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cursor.swift; sourceTree = "<group>"; };
+		DE3661EE2EFAAAB600D94521 /* CursorLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CursorLibrary.swift; sourceTree = "<group>"; };
+		DE3661F12EFAAAB600D94521 /* CapeContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapeContextMenu.swift; sourceTree = "<group>"; };
+		DE3661F22EFAAAB600D94521 /* CapePreviewPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapePreviewPanel.swift; sourceTree = "<group>"; };
+		DE3661F32EFAAAB600D94521 /* EditOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditOverlayView.swift; sourceTree = "<group>"; };
+		DE3661F42EFAAAB600D94521 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		DE3661F52EFAAAB600D94521 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		DE3661F62EFAAAB600D94521 /* MousecapeCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MousecapeCommands.swift; sourceTree = "<group>"; };
+		DE3661F72EFAAAB600D94521 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		DE3661F92EFAAAB600D94521 /* MousecapeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MousecapeApp.swift; sourceTree = "<group>"; };
+		DE3661FA2EFAAAB600D94521 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		DE36620C2EFAAAB600D94521 /* LocalizationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationManager.swift; sourceTree = "<group>"; };
+		FA000001UTITYPES00000000 /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
 		FA048869189F58B1001F3AB5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/Edit.xib; sourceTree = "<group>"; };
 		FA04886B189F58B1001F3AB5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/Library.xib; sourceTree = "<group>"; };
 		FA1DC01719527A56009E879C /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -243,7 +276,6 @@
 		FA359844189DBA3800288163 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		FA359848189DC40100288163 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		FA35984C189DC55A00288163 /* ServiceManagement.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ServiceManagement.framework; path = System/Library/Frameworks/ServiceManagement.framework; sourceTree = SDKROOT; };
-		FA000001UTITYPES00000000 /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
 		FA359850189E035200288163 /* listen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = listen.h; sourceTree = "<group>"; };
 		FA359851189E035900288163 /* listen.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = listen.m; sourceTree = "<group>"; };
 		FA5107E018A823BD00917185 /* MASPreferencesViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MASPreferencesViewController.h; sourceTree = "<group>"; };
@@ -402,6 +434,61 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		DE3661EA2EFAAAB600D94521 /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				DE3661E82EFAAAB600D94521 /* AnimatingCursorView.swift */,
+				DE3661E92EFAAAB600D94521 /* GlassEffectContainer.swift */,
+				DE36620C2EFAAAB600D94521 /* LocalizationManager.swift */,
+			);
+			path = Helpers;
+			sourceTree = "<group>";
+		};
+		DE3661EF2EFAAAB600D94521 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				DE3661EB2EFAAAB600D94521 /* AppEnums.swift */,
+				DE3661EC2EFAAAB600D94521 /* AppState.swift */,
+				DE3661ED2EFAAAB600D94521 /* Cursor.swift */,
+				DE3661EE2EFAAAB600D94521 /* CursorLibrary.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		DE3661F02EFAAAB600D94521 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		DE3661F82EFAAAB600D94521 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				DE3661F12EFAAAB600D94521 /* CapeContextMenu.swift */,
+				DE3661F22EFAAAB600D94521 /* CapePreviewPanel.swift */,
+				DE3661F32EFAAAB600D94521 /* EditOverlayView.swift */,
+				DE3661F42EFAAAB600D94521 /* HomeView.swift */,
+				DE3661F52EFAAAB600D94521 /* MainView.swift */,
+				DE3661F62EFAAAB600D94521 /* MousecapeCommands.swift */,
+				DE3661F72EFAAAB600D94521 /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		DE3661FB2EFAAAB600D94521 /* SwiftUI */ = {
+			isa = PBXGroup;
+			children = (
+				DE3661EA2EFAAAB600D94521 /* Helpers */,
+				DE3661EF2EFAAAB600D94521 /* Models */,
+				DE3661F02EFAAAB600D94521 /* ViewModels */,
+				DE3661F82EFAAAB600D94521 /* Views */,
+				DE3661F92EFAAAB600D94521 /* MousecapeApp.swift */,
+				DE3661FA2EFAAAB600D94521 /* README.md */,
+			);
+			path = SwiftUI;
+			sourceTree = "<group>";
+		};
 		FA5107DD18A823BD00917185 /* MASPreferences */ = {
 			isa = PBXGroup;
 			children = (
@@ -512,6 +599,7 @@
 		FAC69F6A189D603C00BC829D /* Mousecape */ = {
 			isa = PBXGroup;
 			children = (
+				DE3661FB2EFAAAB600D94521 /* SwiftUI */,
 				FA5733A32495667900103FCF /* Mousecape.entitlements */,
 				FAEE650818A047E8003AA182 /* categories */,
 				FAEE650D18A047E8003AA182 /* controllers */,
@@ -950,6 +1038,7 @@
 				FA5107EE18A8253600917185 /* GeneralPreferences.xib in Resources */,
 				FAC69F7D189D603C00BC829D /* Images.xcassets in Resources */,
 				FAC69F75189D603C00BC829D /* Credits.rtf in Resources */,
+				DE3661FC2EFAAAB600D94521 /* README.md in Resources */,
 				FA5107E718A823BD00917185 /* MASPreferencesWindow.xib in Resources */,
 				FAC69F7B189D603C00BC829D /* MainMenu.xib in Resources */,
 			);
@@ -1010,6 +1099,21 @@
 				FAEE653218A047E8003AA182 /* MCCursor.m in Sources */,
 				FAAEF958189F4F8200145DF8 /* scale.m in Sources */,
 				FAEE653418A047E8003AA182 /* MCFormatters.m in Sources */,
+				DE3661FD2EFAAAB600D94521 /* MainView.swift in Sources */,
+				DE3661FE2EFAAAB600D94521 /* EditOverlayView.swift in Sources */,
+				DE3661FF2EFAAAB600D94521 /* AppState.swift in Sources */,
+				DE3662002EFAAAB600D94521 /* CursorLibrary.swift in Sources */,
+				DE3662012EFAAAB600D94521 /* MousecapeApp.swift in Sources */,
+				DE3662022EFAAAB600D94521 /* CapeContextMenu.swift in Sources */,
+				DE3662032EFAAAB600D94521 /* GlassEffectContainer.swift in Sources */,
+				DE3662042EFAAAB600D94521 /* MousecapeCommands.swift in Sources */,
+				DE3662052EFAAAB600D94521 /* SettingsView.swift in Sources */,
+				DE3662062EFAAAB600D94521 /* AnimatingCursorView.swift in Sources */,
+				DE3662072EFAAAB600D94521 /* HomeView.swift in Sources */,
+				DE3662082EFAAAB600D94521 /* CapePreviewPanel.swift in Sources */,
+				DE3662092EFAAAB600D94521 /* Cursor.swift in Sources */,
+				DE36620A2EFAAAB600D94521 /* AppEnums.swift in Sources */,
+				DE36620B2EFAAAB600D94521 /* LocalizationManager.swift in Sources */,
 				FAAEF8F4189EB32700145DF8 /* BTRClipView.m in Sources */,
 				FAAEF8F5189EB32700145DF8 /* BTRScrollView.m in Sources */,
 				FAC69FDC189D636700BC829D /* MCDefs.m in Sources */,
@@ -1251,6 +1355,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.alexzielenski.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "Mousecape/Mousecape-Bridging-Header.h";
+				SWIFT_VERSION = 6.0;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -1277,6 +1383,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.alexzielenski.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "Mousecape/Mousecape-Bridging-Header.h";
+				SWIFT_VERSION = 6.0;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -1341,6 +1449,7 @@
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CODE_SIGN_ENTITLEMENTS = mousecloakHelper/mousecloakHelper.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
@@ -1361,7 +1470,6 @@
 					"/Applications/Xcode6-Beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
 					"$(PROJECT_DIR)/mousecloak/vendor",
 				);
-				CODE_SIGN_ENTITLEMENTS = mousecloakHelper/mousecloakHelper.entitlements;
 				INFOPLIST_FILE = mousecloakHelper/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1383,6 +1491,7 @@
 				CLANG_ENABLE_OBJC_ARC = NO;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CODE_SIGN_ENTITLEMENTS = mousecloakHelper/mousecloakHelper.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
@@ -1400,7 +1509,6 @@
 					"/Applications/Xcode6-Beta.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
 					"$(PROJECT_DIR)/mousecloak/vendor",
 				);
-				CODE_SIGN_ENTITLEMENTS = mousecloakHelper/mousecloakHelper.entitlements;
 				INFOPLIST_FILE = mousecloakHelper/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
