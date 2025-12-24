@@ -55,9 +55,27 @@ struct MousecapeCommands: Commands {
             .keyboardShortcut("s", modifiers: .command)
         }
 
-        // Remove Edit menu items (Undo/Redo/Cut/Copy/Paste)
+        // Edit menu - Undo/Redo for edit mode
+        CommandGroup(replacing: .undoRedo) {
+            Button("Undo") {
+                Task { @MainActor in
+                    AppState.shared.undo()
+                }
+            }
+            .keyboardShortcut("z", modifiers: .command)
+            .disabled(!AppState.shared.canUndo || !AppState.shared.isEditing)
+
+            Button("Redo") {
+                Task { @MainActor in
+                    AppState.shared.redo()
+                }
+            }
+            .keyboardShortcut("z", modifiers: [.command, .shift])
+            .disabled(!AppState.shared.canRedo || !AppState.shared.isEditing)
+        }
+
+        // Remove other Edit menu items
         CommandGroup(replacing: .textEditing) { }
-        CommandGroup(replacing: .undoRedo) { }
         CommandGroup(replacing: .pasteboard) { }
 
         // Cape menu - matches context menu

@@ -50,7 +50,7 @@ final class CursorLibrary: Identifiable, Hashable {
 
     var isHiDPI: Bool {
         get { objcLibrary.isHiDPI }
-        set { objcLibrary.isHiDPI = newValue }
+        set { objcLibrary.setValue(newValue, forKey: "hiDPI") }
     }
 
     var isInCloud: Bool {

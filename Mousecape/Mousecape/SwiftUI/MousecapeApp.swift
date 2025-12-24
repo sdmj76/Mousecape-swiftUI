@@ -60,6 +60,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.delegate = windowDelegate
         windowDelegate?.startObservingDirtyState()
     }
+
+    // Quit app when last window is closed
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return true
+    }
 }
 
 // MARK: - Window Delegate (handles close confirmation)
@@ -83,7 +88,8 @@ class WindowDelegate: NSObject, NSWindowDelegate {
 
     private func updateDocumentEdited() {
         guard let window = NSApp.windows.first else { return }
-        let isDirty = appState.isEditing && (appState.editingCape?.isDirty == true)
+        // Use manual hasUnsavedChanges instead of ObjC isDirty
+        let isDirty = appState.isEditing && appState.hasUnsavedChanges
         if window.isDocumentEdited != isDirty {
             window.isDocumentEdited = isDirty
         }
@@ -91,7 +97,7 @@ class WindowDelegate: NSObject, NSWindowDelegate {
 
     nonisolated func windowShouldClose(_ sender: NSWindow) -> Bool {
         let shouldBlock = MainActor.assumeIsolated {
-            appState.isEditing && appState.editingCape?.isDirty == true
+            appState.isEditing && appState.hasUnsavedChanges
         }
 
         if shouldBlock {

@@ -40,6 +40,12 @@ final class AppState: @unchecked Sendable {
     /// Edit mode: show cape info panel
     var showCapeInfo: Bool = false
 
+    /// Edit mode: track if changes were made (manual tracking)
+    var hasUnsavedChanges: Bool = false
+
+    /// Refresh trigger for cursor list (increment to force refresh)
+    var cursorListRefreshTrigger: Int = 0
+
     /// Delete confirmation state
     var showDeleteConfirmation: Bool = false
     var capeToDelete: CursorLibrary?
@@ -53,6 +59,23 @@ final class AppState: @unchecked Sendable {
     /// Error state
     var lastError: Error?
     var showError: Bool = false
+
+    // MARK: - Undo/Redo
+
+    /// Undo stack - stores closures to undo changes
+    private var undoStack: [() -> Void] = []
+
+    /// Redo stack - stores closures to redo changes
+    private var redoStack: [() -> Void] = []
+
+    /// Maximum undo history size
+    private let maxUndoHistory = 20
+
+    /// Whether undo is available
+    var canUndo: Bool { !undoStack.isEmpty }
+
+    /// Whether redo is available
+    var canRedo: Bool { !redoStack.isEmpty }
 
     // MARK: - ObjC Controller Bridge
 
@@ -167,16 +190,63 @@ final class AppState: @unchecked Sendable {
 
     /// Edit a cape
     func editCape(_ cape: CursorLibrary) {
-        // Clear dirty flag when entering edit mode
-        // This ensures we only track changes made during this editing session
-        cape.clearChangeCount()
         editingCape = cape
         isEditing = true
+        hasUnsavedChanges = false
+        clearUndoHistory()
+    }
+
+    /// Mark that changes have been made
+    func markAsChanged() {
+        hasUnsavedChanges = true
+    }
+
+    /// Register an undoable change
+    /// - Parameters:
+    ///   - undoAction: Closure to undo the change
+    ///   - redoAction: Closure to redo the change
+    func registerUndo(undo undoAction: @escaping () -> Void, redo redoAction: @escaping () -> Void) {
+        // Clear redo stack when new action is registered
+        redoStack.removeAll()
+
+        // Add to undo stack
+        undoStack.append(undoAction)
+
+        // Limit stack size
+        if undoStack.count > maxUndoHistory {
+            undoStack.removeFirst()
+        }
+
+        hasUnsavedChanges = true
+    }
+
+    /// Undo the last change
+    func undo() {
+        guard let undoAction = undoStack.popLast() else { return }
+        undoAction()
+
+        // If no more undo actions, check if we're back to saved state
+        if undoStack.isEmpty {
+            hasUnsavedChanges = false
+        }
+    }
+
+    /// Redo the last undone change
+    func redo() {
+        guard let redoAction = redoStack.popLast() else { return }
+        redoAction()
+        hasUnsavedChanges = true
+    }
+
+    /// Clear undo/redo history
+    func clearUndoHistory() {
+        undoStack.removeAll()
+        redoStack.removeAll()
     }
 
     /// Request to close edit mode (may show confirmation if dirty)
     func requestCloseEdit() {
-        if editingCape?.isDirty == true {
+        if hasUnsavedChanges {
             showDiscardConfirmation = true
         } else {
             closeEdit()
@@ -186,12 +256,16 @@ final class AppState: @unchecked Sendable {
     /// Close edit mode (discard changes)
     func closeEdit() {
         // Revert unsaved changes
-        editingCape?.revertToSaved()
+        if hasUnsavedChanges {
+            editingCape?.revertToSaved()
+        }
         isEditing = false
         editingCape = nil
         editingSelectedCursor = nil
         showCapeInfo = false
         showDiscardConfirmation = false
+        hasUnsavedChanges = false
+        clearUndoHistory()
     }
 
     /// Close edit mode after saving
@@ -204,12 +278,16 @@ final class AppState: @unchecked Sendable {
         editingSelectedCursor = nil
         showCapeInfo = false
         showDiscardConfirmation = false
+        hasUnsavedChanges = false
+        clearUndoHistory()
     }
 
     /// Save the currently editing cape
     func saveCape(_ cape: CursorLibrary) {
         do {
             try cape.save()
+            hasUnsavedChanges = false
+            clearUndoHistory()  // Clear undo history after save
         } catch {
             lastError = error
             showError = true
