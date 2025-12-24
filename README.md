@@ -7,7 +7,11 @@ Mousecape
 
 A free cursor manager for macOS Tahoe (26)+ built using private, nonintrusive CoreGraphics APIs.
 
-![](https://github.com/alexzielenski/Mousecape/raw/master/screenshot.png)
+> **Note:** The new UI based on SwiftUI is under development. You can switch to the `TahoeSupport` branch to build it yourself.
+
+![Home](Screenshot/Home.png)
+![Edit](Screenshot/Edit.png)
+![Setting](Screenshot/Setting.png)
 
 ## How it works
 
@@ -108,7 +112,11 @@ Mousecape
 
 一款免费的 macOS Tahoe (26)+ 光标管理器，使用私有、非侵入式的 CoreGraphics API 构建。
 
-![](https://github.com/alexzielenski/Mousecape/raw/master/screenshot.png)
+> **提示：** 新 UI 基于 swiftUI 正在开发中，可切换至 `TahoeSupport` 分支自行构建。
+
+![主页](Screenshot/Home.png)
+![编辑](Screenshot/Edit.png)
+![设置](Screenshot/Setting.png)
 
 ## 工作原理
 
