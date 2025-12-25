@@ -18,6 +18,7 @@ struct CapePreviewPanel: View {
     @State private var zoomedCursor: Cursor?
     @State private var cachedCursors: [Cursor] = []
     @Namespace private var cursorNamespace
+    @AppStorage("showAuthorInfo") private var showAuthorInfo = true
 
     private var isApplied: Bool {
         appState.appliedCape?.id == cape.id
@@ -37,9 +38,11 @@ struct CapePreviewPanel: View {
                                     AppliedBadge()
                                 }
                             }
-                            Text("by \(cape.author)")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                            if showAuthorInfo {
+                                Text("by \(cape.author)")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                         Spacer()
                     }
@@ -186,6 +189,7 @@ struct CursorFlowGrid: View {
     let zoomedCursor: Cursor?
     let namespace: Namespace.ID
     var onCursorTap: ((Cursor) -> Void)?
+    @AppStorage("previewGridColumns") private var previewGridColumns = 0
 
     init(
         cursors: [Cursor],
@@ -199,9 +203,15 @@ struct CursorFlowGrid: View {
         self.onCursorTap = onCursorTap
     }
 
-    private let columns = [
-        GridItem(.adaptive(minimum: 80, maximum: 100), spacing: 24)
-    ]
+    private var columns: [GridItem] {
+        if previewGridColumns > 0 {
+            // Fixed number of columns
+            return Array(repeating: GridItem(.flexible(), spacing: 24), count: previewGridColumns)
+        } else {
+            // Auto (adaptive)
+            return [GridItem(.adaptive(minimum: 80, maximum: 100), spacing: 24)]
+        }
+    }
 
     var body: some View {
         LazyVGrid(columns: columns, spacing: 12) {

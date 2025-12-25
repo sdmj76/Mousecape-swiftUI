@@ -19,6 +19,7 @@ struct AnimatingCursorView: View {
 
     @State private var currentFrame: Int = 0
     @State private var animationTimer: Timer?
+    @AppStorage("showPreviewAnimations") private var showPreviewAnimations = true
 
     var body: some View {
         GeometryReader { geometry in
@@ -72,6 +73,14 @@ struct AnimatingCursorView: View {
             // Force refresh - restart animation
             restartAnimation()
         }
+        .onChange(of: showPreviewAnimations) { _, newValue in
+            if newValue {
+                startAnimation()
+            } else {
+                stopAnimation()
+                currentFrame = 0
+            }
+        }
     }
 
     /// Extract a single frame from the sprite sheet
@@ -108,7 +117,7 @@ struct AnimatingCursorView: View {
     }
 
     private func startAnimation() {
-        guard cursor.frameCount > 1, cursor.frameDuration > 0 else {
+        guard cursor.frameCount > 1, cursor.frameDuration > 0, showPreviewAnimations else {
             currentFrame = 0
             return
         }

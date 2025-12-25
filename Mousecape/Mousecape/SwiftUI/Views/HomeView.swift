@@ -113,7 +113,7 @@ struct CapeIconGridView: View {
     @Environment(AppState.self) private var appState
 
     private let columns = [
-        GridItem(.adaptive(minimum: 80, maximum: 100), spacing: 12)
+        GridItem(.adaptive(minimum: 64, maximum: 80), spacing: 12)
     ]
 
     var body: some View {
@@ -197,8 +197,9 @@ struct CapeIconCell: View {
                     .truncationMode(.tail)
             }
         }
-        .frame(width: 80)
-        .padding(8)
+        .frame(width: 64)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 8)
         .glassEffect(
             isSelected ? .regular : (isHovered ? .regular : .clear),
             in: RoundedRectangle(cornerRadius: 10)

@@ -1032,7 +1032,7 @@ struct HelperToolSettingsView: View {
                 }
             }
 
-            Text("The helper tool ensures cursors persist after logout/login and system updates.")
+            Text("Once installed, the helper tool will automatically apply cursors at system startup without manually applying them.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

@@ -30,7 +30,6 @@ enum AppPage: String, CaseIterable, Identifiable {
 enum SettingsCategory: String, CaseIterable, Identifiable {
     case general
     case appearance
-    case shortcuts
     case advanced
 
     var id: String { rawValue }
@@ -39,7 +38,6 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
         switch self {
         case .general: return "General"
         case .appearance: return "Appearance"
-        case .shortcuts: return "Shortcuts"
         case .advanced: return "Advanced"
         }
     }
@@ -48,7 +46,6 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
         switch self {
         case .general: return "gear"
         case .appearance: return "paintbrush"
-        case .shortcuts: return "keyboard"
         case .advanced: return "wrench.and.screwdriver"
         }
     }

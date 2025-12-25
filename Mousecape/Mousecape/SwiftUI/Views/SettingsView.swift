@@ -49,8 +49,6 @@ struct SettingsView: View {
             GeneralSettingsView()
         case .appearance:
             AppearanceSettingsView()
-        case .shortcuts:
-            ShortcutsSettingsView()
         case .advanced:
             AdvancedSettingsView()
         }
@@ -60,7 +58,6 @@ struct SettingsView: View {
 // MARK: - General Settings
 
 struct GeneralSettingsView: View {
-    @AppStorage("launchAtLogin") private var launchAtLogin = false
     @AppStorage("applyLastCapeOnLaunch") private var applyLastCapeOnLaunch = true
     @AppStorage("doubleClickAction") private var doubleClickAction = 0
     @State private var cursorScale: Double = 1.0
@@ -73,8 +70,10 @@ struct GeneralSettingsView: View {
 
     var body: some View {
         Form {
+            // Helper Tool Section (moved from Advanced)
+            HelperToolSettingsView()
+
             Section(localization.localized("Startup")) {
-                Toggle(localization.localized("Launch at Login"), isOn: $launchAtLogin)
                 Toggle(localization.localized("Apply Last Cape on Launch"), isOn: $applyLastCapeOnLaunch)
             }
 
@@ -185,66 +184,15 @@ struct AppearanceSettingsView: View {
     }
 }
 
-// MARK: - Shortcuts Settings
-
-struct ShortcutsSettingsView: View {
-    @State private var applyLastCapeShortcut = "\u{2325}\u{21E7}C"
-    @State private var resetToDefaultShortcut = "\u{2325}\u{21E7}R"
-    @Environment(LocalizationManager.self) private var localization
-
-    var body: some View {
-        Form {
-            Section(localization.localized("Global Shortcuts")) {
-                HStack {
-                    Text(localization.localized("Quick Apply Last Cape"))
-                    Spacer()
-                    ShortcutRecorderView(shortcut: $applyLastCapeShortcut)
-                }
-
-                HStack {
-                    Text(localization.localized("Reset to Default Cursor"))
-                    Spacer()
-                    ShortcutRecorderView(shortcut: $resetToDefaultShortcut)
-                }
-            }
-
-            Section {
-                Text(localization.localized("These shortcuts work in any application."))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .formStyle(.grouped)
-        .navigationTitle(localization.localized("Shortcuts"))
-    }
-}
-
-// MARK: - Shortcut Recorder View (Simplified)
-
-struct ShortcutRecorderView: View {
-    @Binding var shortcut: String
-
-    var body: some View {
-        TextField("", text: $shortcut)
-            .frame(width: 80)
-            .textFieldStyle(.roundedBorder)
-            .multilineTextAlignment(.center)
-    }
-}
-
 // MARK: - Advanced Settings
 
 struct AdvancedSettingsView: View {
-    @AppStorage("debugLogging") private var debugLogging = false
     @State private var showResetConfirmation = false
     @Environment(AppState.self) private var appState
     @Environment(LocalizationManager.self) private var localization
 
     var body: some View {
         Form {
-            // Helper Tool Section
-            HelperToolSettingsView()
-
             Section(localization.localized("Storage")) {
                 LabeledContent(localization.localized("Cape Folder")) {
                     Text("~/Library/Application Support/Mousecape/capes")
@@ -252,20 +200,8 @@ struct AdvancedSettingsView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                HStack {
-                    Button(localization.localized("Show in Finder")) {
-                        appState.openCapeFolder()
-                    }
-                    Button(localization.localized("Change Location...")) {
-                        // TODO: Implement location change
-                    }
-                }
-            }
-
-            Section(localization.localized("Debug")) {
-                Toggle(localization.localized("Enable Debug Logging"), isOn: $debugLogging)
-                Button(localization.localized("Export Diagnostics...")) {
-                    exportDiagnostics()
+                Button(localization.localized("Show in Finder")) {
+                    appState.openCapeFolder()
                 }
             }
 
@@ -329,40 +265,9 @@ struct AdvancedSettingsView: View {
         let defaults = UserDefaults.standard
         let domain = Bundle.main.bundleIdentifier!
         defaults.removePersistentDomain(forName: domain)
-    }
 
-    private func exportDiagnostics() {
-        let panel = NSSavePanel()
-        panel.title = "Export Diagnostics"
-        panel.nameFieldStringValue = "mousecape-diagnostics.txt"
-        panel.allowedContentTypes = [.plainText]
-
-        panel.begin { response in
-            guard response == .OK, let url = panel.url else { return }
-
-            var diagnostics = "Mousecape Diagnostics\n"
-            diagnostics += "======================\n\n"
-            diagnostics += "Date: \(Date())\n"
-            diagnostics += "macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)\n"
-
-            if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-               let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
-                diagnostics += "App Version: \(version) (\(build))\n"
-            }
-
-            diagnostics += "\nCape Count: \(appState.capes.count)\n"
-            if let applied = appState.appliedCape {
-                diagnostics += "Applied Cape: \(applied.name)\n"
-            }
-
-            diagnostics += "\nUser Defaults:\n"
-            let defaults = UserDefaults.standard.dictionaryRepresentation()
-            for (key, value) in defaults where key.hasPrefix("com.alexzielenski") || key.contains("cape") || key.contains("cursor") {
-                diagnostics += "  \(key): \(value)\n"
-            }
-
-            try? diagnostics.write(to: url, atomically: true, encoding: .utf8)
-        }
+        // Reset language to system default
+        LocalizationManager.shared.currentLanguage = .system
     }
 
     private func checkForUpdates() {

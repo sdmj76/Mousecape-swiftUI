@@ -253,12 +253,16 @@ final class AppState: @unchecked Sendable {
     func applyCape(_ cape: CursorLibrary) {
         libraryController?.applyCape(cape.underlyingLibrary)
         appliedCape = cape
+        // Save identifier for "Apply Last Cape on Launch" feature
+        UserDefaults.standard.set(cape.identifier, forKey: "lastAppliedCapeIdentifier")
     }
 
     /// Reset to default system cursors
     func resetToDefault() {
         libraryController?.restoreCape()
         appliedCape = nil
+        // Clear last applied cape identifier
+        UserDefaults.standard.removeObject(forKey: "lastAppliedCapeIdentifier")
     }
 
     /// Edit a cape

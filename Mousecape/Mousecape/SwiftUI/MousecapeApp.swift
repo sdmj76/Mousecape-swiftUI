@@ -60,6 +60,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         windowDelegate?.startObservingDirtyState()
     }
 
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // Apply last cape on launch if enabled
+        let applyLastCapeOnLaunch = UserDefaults.standard.bool(forKey: "applyLastCapeOnLaunch")
+        // Default to true if never set
+        if UserDefaults.standard.object(forKey: "applyLastCapeOnLaunch") == nil {
+            UserDefaults.standard.set(true, forKey: "applyLastCapeOnLaunch")
+        }
+
+        if applyLastCapeOnLaunch || UserDefaults.standard.object(forKey: "applyLastCapeOnLaunch") == nil {
+            // Get last applied cape identifier from preferences
+            if let lastCapeIdentifier = UserDefaults.standard.string(forKey: "lastAppliedCapeIdentifier") {
+                Task { @MainActor in
+                    let appState = AppState.shared
+                    if let cape = appState.capes.first(where: { $0.identifier == lastCapeIdentifier }) {
+                        appState.applyCape(cape)
+                    }
+                }
+            }
+        }
+    }
+
     // Quit app when last window is closed
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return true
