@@ -25,7 +25,6 @@ struct MousecapeApp: App {
                 configureWindowAppearance()
             }
         }
-        .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 900, height: 600)
         .commands {
             MousecapeCommands()
@@ -38,6 +37,12 @@ struct MousecapeApp: App {
 
             // Make titlebar transparent
             window.titlebarAppearsTransparent = true
+
+            // Disable fullscreen (green) button
+            window.collectionBehavior.remove(.fullScreenPrimary)
+            if let zoomButton = window.standardWindowButton(.zoomButton) {
+                zoomButton.isEnabled = false
+            }
 
             // Set up window delegate for close confirmation
             appDelegate.setupWindowDelegate(for: window, appState: appState)

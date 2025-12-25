@@ -38,18 +38,8 @@ struct EditDetailContent: View {
                 appState.editingSelectedCursor = cape.cursors.first
             }
         }
-        // Edit mode toolbar (Landmarks-style layout)
+        // Edit mode toolbar (navigationTitle is now in HomeView)
         .toolbar {
-            // Back button on the left
-            ToolbarItem(placement: .cancellationAction) {
-                Button(action: {
-                    appState.requestCloseEdit()
-                }) {
-                    Label("Back", systemImage: "chevron.left")
-                }
-                .help("Back")
-            }
-
             // Flexible spacer pushes buttons to the right
             ToolbarSpacer(.flexible)
 
@@ -71,11 +61,11 @@ struct EditDetailContent: View {
                 .disabled(appState.editingSelectedCursor == nil)
 
                 Button(action: {
-                    appState.saveCape(cape)
+                    appState.requestCloseEdit()
                 }) {
-                    Image(systemName: "square.and.arrow.down")
+                    Image(systemName: "checkmark")
                 }
-                .help("Save")
+                .help("Done")
             }
 
             ToolbarSpacer(.fixed)

@@ -37,44 +37,43 @@ struct HomeView: View {
             }
             .navigationSplitViewColumnWidth(min: 200, ideal: 280, max: 400)
         } detail: {
-            // Right side: Preview or Edit panel with slide transition
+            // Right side: Preview or Edit panel
             // Wrapped in NavigationStack for proper toolbar navigation placement
             NavigationStack {
-                ZStack {
-                    // Preview panel
-                    if !appState.isEditing {
-                        Group {
-                            if let cape = appState.selectedCape {
-                                CapePreviewPanel(cape: cape)
-                            } else {
-                                ContentUnavailableView(
-                                    "Select a Cape",
-                                    systemImage: "cursorarrow.click.2",
-                                    description: Text("Choose a cape from the list to preview")
-                                )
-                            }
-                        }
-                        .transition(.move(edge: .leading).combined(with: .opacity))
-                    }
-
-                    // Edit panel (detail content only, no NavigationSplitView)
-                    if appState.isEditing, let cape = appState.editingCape {
-                        EditDetailContent(cape: cape)
-                            .transition(.move(edge: .trailing).combined(with: .opacity))
-                    }
+                // Use conditional root view instead of ZStack for proper navigationTitle
+                if appState.isEditing, let cape = appState.editingCape {
+                    EditDetailContent(cape: cape)
+                        .navigationTitle(cape.name)
+                } else if let cape = appState.selectedCape {
+                    CapePreviewPanel(cape: cape)
+                } else {
+                    ContentUnavailableView(
+                        "Select a Cape",
+                        systemImage: "cursorarrow.click.2",
+                        description: Text("Choose a cape from the list to preview")
+                    )
                 }
-                .animation(.spring(duration: 0.35, bounce: 0.15), value: appState.isEditing)
             }
         }
         .focusedSceneValue(\.selectedCape, $appState.selectedCape)
         .toolbar {
             if !appState.isEditing {
-                // Home page buttons
+                // Home page buttons: Add, Delete, Import, Export, Edit, Apply
                 ToolbarItemGroup(placement: .primaryAction) {
                     Button(action: { appState.createNewCape() }) {
                         Image(systemName: "plus")
                     }
                     .help("New Cape")
+
+                    Button(action: {
+                        if let cape = appState.selectedCape {
+                            appState.confirmDeleteCape(cape)
+                        }
+                    }) {
+                        Image(systemName: "minus")
+                    }
+                    .help("Delete Cape")
+                    .disabled(appState.selectedCape == nil)
 
                     Button(action: { appState.importCape() }) {
                         Image(systemName: "square.and.arrow.down")
@@ -83,12 +82,12 @@ struct HomeView: View {
 
                     Button(action: {
                         if let cape = appState.selectedCape {
-                            appState.applyCape(cape)
+                            appState.exportCape(cape)
                         }
                     }) {
-                        Image(systemName: "checkmark.circle")
+                        Image(systemName: "square.and.arrow.up")
                     }
-                    .help("Apply Cape")
+                    .help("Export Cape")
                     .disabled(appState.selectedCape == nil)
 
                     Button(action: {
@@ -103,22 +102,12 @@ struct HomeView: View {
 
                     Button(action: {
                         if let cape = appState.selectedCape {
-                            appState.exportCape(cape)
+                            appState.applyCape(cape)
                         }
                     }) {
-                        Image(systemName: "square.and.arrow.up")
+                        Image(systemName: "checkmark")
                     }
-                    .help("Export Cape")
-                    .disabled(appState.selectedCape == nil)
-
-                    Button(role: .destructive, action: {
-                        if let cape = appState.selectedCape {
-                            appState.confirmDeleteCape(cape)
-                        }
-                    }) {
-                        Image(systemName: "trash")
-                    }
-                    .help("Delete Cape")
+                    .help("Apply Cape")
                     .disabled(appState.selectedCape == nil)
                 }
             }
@@ -127,6 +116,8 @@ struct HomeView: View {
         .onChange(of: appState.isEditing) { _, isEditing in
             columnVisibility = isEditing ? .detailOnly : .all
         }
+        // Remove sidebar toggle button in edit mode
+        .toolbar(removing: .sidebarToggle)
         // Delete confirmation dialog
         .confirmationDialog(
             localization.localized("Delete Cape"),
