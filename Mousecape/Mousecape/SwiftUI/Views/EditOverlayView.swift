@@ -43,7 +43,7 @@ struct EditDetailContent: View {
             // Flexible spacer pushes buttons to the right
             ToolbarSpacer(.flexible)
 
-            // Main action buttons group (like Landmarks' favorite/collections)
+            // Main action buttons group
             ToolbarItemGroup {
                 Button(action: {
                     appState.showAddCursorSheet = true
@@ -61,18 +61,6 @@ struct EditDetailContent: View {
                 .disabled(appState.editingSelectedCursor == nil)
 
                 Button(action: {
-                    appState.requestCloseEdit()
-                }) {
-                    Image(systemName: "checkmark")
-                }
-                .help("Done")
-            }
-
-            ToolbarSpacer(.fixed)
-
-            // Info button (rightmost, like Landmarks' Info button)
-            ToolbarItem {
-                Button(action: {
                     appState.showCapeInfo.toggle()
                     if appState.showCapeInfo {
                         appState.editingSelectedCursor = nil
@@ -81,6 +69,18 @@ struct EditDetailContent: View {
                     Image(systemName: appState.showCapeInfo ? "info.circle.fill" : "info.circle")
                 }
                 .help("Cape Info")
+            }
+
+            ToolbarSpacer(.fixed)
+
+            // Done button (rightmost, standalone with green color)
+            ToolbarItem {
+                Button(action: {
+                    appState.requestCloseEdit()
+                }) {
+                    Image(systemName: "checkmark")
+                }
+                .help("Done")
             }
         }
     }

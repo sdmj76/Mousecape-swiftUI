@@ -17,6 +17,83 @@ struct HomeView: View {
     @Environment(LocalizationManager.self) private var localization
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
+    // MARK: - Home Toolbar Content
+    @ToolbarContentBuilder
+    private var homeToolbarContent: some ToolbarContent {
+        // Flexible spacer pushes buttons to the right
+        ToolbarSpacer(.flexible)
+
+        // Group 1: New, Delete, Edit
+        ToolbarItemGroup {
+            Button(action: { appState.createNewCape() }) {
+                Image(systemName: "plus")
+            }
+            .help("New Cape")
+
+            Button(action: {
+                if let cape = appState.selectedCape {
+                    appState.confirmDeleteCape(cape)
+                }
+            }) {
+                Image(systemName: "minus")
+            }
+            .help("Delete Cape")
+            .disabled(appState.selectedCape == nil)
+
+            Button(action: {
+                if let cape = appState.selectedCape {
+                    appState.editCape(cape)
+                }
+            }) {
+                Image(systemName: "pencil")
+            }
+            .help("Edit Cape")
+            .disabled(appState.selectedCape == nil)
+
+            Button(action: {
+                if let cape = appState.selectedCape {
+                    appState.applyCape(cape)
+                }
+            }) {
+                Image(systemName: "checkmark.circle")
+            }
+            .help("Apply Cape")
+            .disabled(appState.selectedCape == nil)
+        }
+
+        ToolbarSpacer(.fixed)
+
+        // Group 2: Import, Export
+        ToolbarItemGroup {
+            Button(action: { appState.importCape() }) {
+                Image(systemName: "square.and.arrow.down")
+            }
+            .help("Import Cape")
+
+            Button(action: {
+                if let cape = appState.selectedCape {
+                    appState.exportCape(cape)
+                }
+            }) {
+                Image(systemName: "square.and.arrow.up")
+            }
+            .help("Export Cape")
+            .disabled(appState.selectedCape == nil)
+        }
+
+        ToolbarSpacer(.fixed)
+
+        // Standalone: Settings
+        ToolbarItem {
+            Button(action: {
+                appState.currentPage = .settings
+            }) {
+                Image(systemName: "gear")
+            }
+            .help("Settings")
+        }
+    }
+
     var body: some View {
         @Bindable var appState = appState
 
@@ -46,76 +123,22 @@ struct HomeView: View {
                         .navigationTitle(cape.name)
                 } else if let cape = appState.selectedCape {
                     CapePreviewPanel(cape: cape)
+                        .toolbar {
+                            homeToolbarContent
+                        }
                 } else {
                     ContentUnavailableView(
                         "Select a Cape",
                         systemImage: "cursorarrow.click.2",
                         description: Text("Choose a cape from the list to preview")
                     )
+                    .toolbar {
+                        homeToolbarContent
+                    }
                 }
             }
         }
         .focusedSceneValue(\.selectedCape, $appState.selectedCape)
-        .toolbar {
-            if !appState.isEditing {
-                // Home page buttons: Add, Delete, Import, Export, Edit, Apply
-                ToolbarItemGroup(placement: .primaryAction) {
-                    Button(action: { appState.createNewCape() }) {
-                        Image(systemName: "plus")
-                    }
-                    .help("New Cape")
-
-                    Button(action: {
-                        if let cape = appState.selectedCape {
-                            appState.confirmDeleteCape(cape)
-                        }
-                    }) {
-                        Image(systemName: "minus")
-                    }
-                    .help("Delete Cape")
-                    .disabled(appState.selectedCape == nil)
-
-                    Button(action: { appState.importCape() }) {
-                        Image(systemName: "square.and.arrow.down")
-                    }
-                    .help("Import Cape")
-
-                    Button(action: {
-                        if let cape = appState.selectedCape {
-                            appState.exportCape(cape)
-                        }
-                    }) {
-                        Image(systemName: "square.and.arrow.up")
-                    }
-                    .help("Export Cape")
-                    .disabled(appState.selectedCape == nil)
-
-                    Button(action: {
-                        if let cape = appState.selectedCape {
-                            appState.editCape(cape)
-                        }
-                    }) {
-                        Image(systemName: "pencil")
-                    }
-                    .help("Edit Cape")
-                    .disabled(appState.selectedCape == nil)
-
-                    Button(action: {
-                        if let cape = appState.selectedCape {
-                            appState.applyCape(cape)
-                        }
-                    }) {
-                        Image(systemName: "checkmark")
-                    }
-                    .help("Apply Cape")
-                    .disabled(appState.selectedCape == nil)
-                }
-            }
-        }
-        // Hide sidebar when editing (uses system default animation)
-        .onChange(of: appState.isEditing) { _, isEditing in
-            columnVisibility = isEditing ? .detailOnly : .all
-        }
         // Remove sidebar toggle button in edit mode
         .toolbar(removing: .sidebarToggle)
         // Delete confirmation dialog

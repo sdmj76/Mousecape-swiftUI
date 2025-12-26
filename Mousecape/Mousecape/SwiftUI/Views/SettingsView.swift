@@ -12,6 +12,7 @@ struct SettingsView: View {
     @State private var selectedCategory: SettingsCategory = .general
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @Environment(LocalizationManager.self) private var localization
+    @Environment(AppState.self) private var appState
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -26,6 +27,16 @@ struct SettingsView: View {
             // Right: Settings content based on selected category
             settingsContent
                 .transition(.opacity.animation(.easeInOut(duration: 0.2)))
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button(action: {
+                    appState.currentPage = .home
+                }) {
+                    Image(systemName: "checkmark")
+                }
+                .help("Done")
+            }
         }
     }
 
