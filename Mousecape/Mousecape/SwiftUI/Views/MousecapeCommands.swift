@@ -141,15 +141,8 @@ struct MousecapeCommands: Commands {
             .disabled(selectedCape == nil)
         }
 
-        // View menu
-        CommandMenu("View") {
-            Button("Refresh") {
-                Task { @MainActor in
-                    AppState.shared.refreshCapes()
-                }
-            }
-            .keyboardShortcut("r", modifiers: [.command, .shift])
-        }
+        // Hide system View menu (toolbar options)
+        CommandGroup(replacing: .toolbar) { }
 
         // Help menu
         CommandGroup(replacing: .help) {

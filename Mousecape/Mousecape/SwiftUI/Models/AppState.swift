@@ -687,8 +687,9 @@ final class AppState: @unchecked Sendable {
                 return
             }
 
-            // Create new cape with folder name
-            let capeName = sanitizeCapeNameFromFolder(folderURL)
+            // Create new cape with folder name (use unique name if duplicate exists)
+            let baseName = sanitizeCapeNameFromFolder(folderURL)
+            let capeName = findUniqueName(baseName: baseName, author: "Imported")
             let newCape = CursorLibrary(name: capeName, author: "Imported")
 
             // Process each cursor result

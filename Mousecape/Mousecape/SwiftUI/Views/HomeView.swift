@@ -55,7 +55,7 @@ struct HomeView: View {
                     appState.editCape(cape)
                 }
             }) {
-                Image(systemName: "pencil")
+                Image(systemName: "square.and.pencil")
             }
             .help(localization.localized("Edit Cape"))
             .disabled(appState.selectedCape == nil)
@@ -147,6 +147,7 @@ struct HomeView: View {
                     }
                 }
             }
+            .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         }
         .focusedSceneValue(\.selectedCape, $appState.selectedCape)
         // Remove sidebar toggle button in edit mode

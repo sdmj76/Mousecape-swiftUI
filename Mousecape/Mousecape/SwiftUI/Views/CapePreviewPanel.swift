@@ -52,8 +52,6 @@ struct CapePreviewPanel: View {
                 }
                 .padding()
 
-                Divider()
-
                 // Middle: Cursor preview grid (auto-wrapping)
                 ScrollView {
                     CursorFlowGrid(
@@ -67,8 +65,6 @@ struct CapePreviewPanel: View {
                     }
                     .padding()
                 }
-
-                Divider()
 
                 // Bottom: Cursor count
                 HStack {
