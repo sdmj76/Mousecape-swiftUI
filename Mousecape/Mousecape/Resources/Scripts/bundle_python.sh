@@ -47,13 +47,16 @@ cp "${SCRIPTS_SRC}/curconvert.py" "${APP_RESOURCES}/"
 chmod +x "${APP_RESOURCES}/curconvert.py"
 
 # Create a wrapper script for easy invocation
+# Note: We directly call the bundled Python instead of using activate script
+# because activate contains hardcoded paths that break when app is relocated
 cat > "${APP_RESOURCES}/run_curconvert.sh" << 'EOF'
 #!/bin/bash
 # Wrapper script to run curconvert.py with bundled Python
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-source "${SCRIPT_DIR}/python-env/bin/activate"
-python3 "${SCRIPT_DIR}/curconvert.py" "$@"
-deactivate
+PYTHON_BIN="${SCRIPT_DIR}/python-env/bin/python3"
+
+# Use bundled Python directly (avoids hardcoded paths in activate script)
+"${PYTHON_BIN}" "${SCRIPT_DIR}/curconvert.py" "$@"
 EOF
 chmod +x "${APP_RESOURCES}/run_curconvert.sh"
 
