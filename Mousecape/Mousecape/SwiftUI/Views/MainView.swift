@@ -10,6 +10,7 @@ import SwiftUI
 
 struct MainView: View {
     @Environment(AppState.self) private var appState
+    @Environment(LocalizationManager.self) private var localization
 
     var body: some View {
         ZStack {
@@ -26,13 +27,13 @@ struct MainView: View {
             }
         }
         .alert(
-            appState.importResultIsSuccess ? "Import Complete" : "Import Failed",
+            appState.importResultIsSuccess ? localization.localized("Import Complete") : localization.localized("Import Failed"),
             isPresented: Binding(
                 get: { appState.showImportResult },
                 set: { appState.showImportResult = $0 }
             )
         ) {
-            Button("OK") {
+            Button(localization.localized("OK")) {
                 appState.showImportResult = false
             }
         } message: {

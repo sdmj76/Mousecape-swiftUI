@@ -26,19 +26,19 @@ struct HomeView: View {
         // Group 1: New, Delete, Edit
         ToolbarItemGroup {
             Menu {
-                Button("New Cape") {
+                Button(localization.localized("New Cape")) {
                     appState.createNewCape()
                 }
                 #if ENABLE_WINDOWS_IMPORT
                 Divider()
-                Button("Import from Windows Cursors...") {
+                Button(localization.localized("Import from Windows Cursors...")) {
                     appState.importWindowsCursorFolder()
                 }
                 #endif
             } label: {
                 Image(systemName: "plus")
             }
-            .help("New Cape")
+            .help(localization.localized("New Cape"))
 
             Button(action: {
                 if let cape = appState.selectedCape {
@@ -47,7 +47,7 @@ struct HomeView: View {
             }) {
                 Image(systemName: "minus")
             }
-            .help("Delete Cape")
+            .help(localization.localized("Delete Cape"))
             .disabled(appState.selectedCape == nil)
 
             Button(action: {
@@ -57,7 +57,7 @@ struct HomeView: View {
             }) {
                 Image(systemName: "pencil")
             }
-            .help("Edit Cape")
+            .help(localization.localized("Edit Cape"))
             .disabled(appState.selectedCape == nil)
 
             Button(action: {
@@ -67,7 +67,7 @@ struct HomeView: View {
             }) {
                 Image(systemName: "checkmark.circle")
             }
-            .help("Apply Cape")
+            .help(localization.localized("Apply Cape"))
             .disabled(appState.selectedCape == nil)
         }
 
@@ -78,7 +78,7 @@ struct HomeView: View {
             Button(action: { appState.importCape() }) {
                 Image(systemName: "square.and.arrow.down")
             }
-            .help("Import Cape")
+            .help(localization.localized("Import Cape"))
 
             Button(action: {
                 if let cape = appState.selectedCape {
@@ -87,7 +87,7 @@ struct HomeView: View {
             }) {
                 Image(systemName: "square.and.arrow.up")
             }
-            .help("Export Cape")
+            .help(localization.localized("Export Cape"))
             .disabled(appState.selectedCape == nil)
         }
 
@@ -100,7 +100,7 @@ struct HomeView: View {
             }) {
                 Image(systemName: "gear")
             }
-            .help("Settings")
+            .help(localization.localized("Settings"))
         }
     }
 
@@ -138,9 +138,9 @@ struct HomeView: View {
                         }
                 } else {
                     ContentUnavailableView(
-                        "Select a Cape",
+                        localization.localized("Select a Cape"),
                         systemImage: "cursorarrow.click.2",
-                        description: Text("Choose a cape from the list to preview")
+                        description: Text(localization.localized("Choose a cape from the list to preview"))
                     )
                     .toolbar {
                         homeToolbarContent
@@ -189,19 +189,19 @@ struct HomeView: View {
         }
         // Delete cursor confirmation dialog
         .confirmationDialog(
-            "Delete Cursor?",
+            localization.localized("Delete Cursor?"),
             isPresented: $appState.showDeleteCursorConfirmation,
             titleVisibility: .visible
         ) {
-            Button("Delete", role: .destructive) {
+            Button(localization.localized("Delete"), role: .destructive) {
                 appState.deleteSelectedCursor()
             }
-            Button("Cancel", role: .cancel) {
+            Button(localization.localized("Cancel"), role: .cancel) {
                 appState.showDeleteCursorConfirmation = false
             }
         } message: {
             if let cursor = appState.editingSelectedCursor {
-                Text("Are you sure you want to delete '\(cursor.displayName)'?")
+                Text("\(localization.localized("Are you sure you want to delete")) '\(cursor.displayName)'?")
             }
         }
         // Duplicate filename error alert
@@ -250,20 +250,21 @@ struct HomeView: View {
 
 struct EmptyStateView: View {
     @Environment(AppState.self) private var appState
+    @Environment(LocalizationManager.self) private var localization
 
     var body: some View {
         ContentUnavailableView {
-            Label("No Capes", systemImage: "cursorarrow.slash")
+            Label(localization.localized("No Capes"), systemImage: "cursorarrow.slash")
         } description: {
-            Text("Create a new cape or import an existing one to get started.")
+            Text(localization.localized("Create a new cape or import an existing one to get started."))
         } actions: {
             HStack(spacing: 12) {
-                Button("New Cape") {
+                Button(localization.localized("New Cape")) {
                     appState.createNewCape()
                 }
                 .buttonStyle(.borderedProminent)
 
-                Button("Import Cape") {
+                Button(localization.localized("Import Cape")) {
                     appState.importCape()
                 }
                 .buttonStyle(.bordered)

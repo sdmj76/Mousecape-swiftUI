@@ -30,6 +30,7 @@ extension UTType {
 struct EditDetailContent: View {
     let cape: CursorLibrary
     @Environment(AppState.self) private var appState
+    @Environment(LocalizationManager.self) private var localization
 
     var body: some View {
         Group {
@@ -40,9 +41,9 @@ struct EditDetailContent: View {
                     .id(cursor.id)  // Force view recreation when cursor changes
             } else {
                 ContentUnavailableView(
-                    "Select a Cursor",
+                    localization.localized("Select a Cursor"),
                     systemImage: "cursorarrow.click",
-                    description: Text("Choose a cursor from the list to edit")
+                    description: Text(localization.localized("Choose a cursor from the list to edit"))
                 )
             }
         }
@@ -66,14 +67,14 @@ struct EditDetailContent: View {
                 }) {
                     Image(systemName: "plus")
                 }
-                .help("Add Cursor")
+                .help(localization.localized("Add Cursor"))
 
                 Button(action: {
                     appState.showDeleteCursorConfirmation = true
                 }) {
                     Image(systemName: "minus")
                 }
-                .help("Delete Cursor")
+                .help(localization.localized("Delete Cursor"))
                 .disabled(appState.editingSelectedCursor == nil)
 
                 Button(action: {
@@ -84,7 +85,7 @@ struct EditDetailContent: View {
                 }) {
                     Image(systemName: appState.showCapeInfo ? "info.circle.fill" : "info.circle")
                 }
-                .help("Cape Info")
+                .help(localization.localized("Cape Info"))
             }
 
             ToolbarSpacer(.fixed)
@@ -96,7 +97,7 @@ struct EditDetailContent: View {
                 }) {
                     Image(systemName: "checkmark")
                 }
-                .help("Done")
+                .help(localization.localized("Done"))
             }
         }
     }
@@ -154,6 +155,7 @@ struct EditOverlayView: View {
 struct CapeInfoView: View {
     @Bindable var cape: CursorLibrary
     @Environment(AppState.self) private var appState
+    @Environment(LocalizationManager.self) private var localization
 
     /// Current filename from fileURL
     private var currentFilename: String {
@@ -180,11 +182,11 @@ struct CapeInfoView: View {
             VStack(spacing: 20) {
                 // Cape metadata form
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Cape Information")
+                    Text(localization.localized("Cape Information"))
                         .font(.headline)
 
-                    LabeledContent("Name") {
-                        TextField("Cape Name", text: Binding(
+                    LabeledContent(localization.localized("Name")) {
+                        TextField(localization.localized("Name"), text: Binding(
                             get: { cape.name },
                             set: { newValue in
                                 // Filter to only allow valid filename characters
@@ -206,8 +208,8 @@ struct CapeInfoView: View {
                         )
                     }
 
-                    LabeledContent("Author") {
-                        TextField("Author", text: Binding(
+                    LabeledContent(localization.localized("Author")) {
+                        TextField(localization.localized("Author"), text: Binding(
                             get: { cape.author },
                             set: { newValue in
                                 // Filter to only allow valid filename characters
@@ -229,8 +231,8 @@ struct CapeInfoView: View {
                         )
                     }
 
-                    LabeledContent("Version") {
-                        TextField("Version", value: Binding(
+                    LabeledContent(localization.localized("Version")) {
+                        TextField(localization.localized("Version"), value: Binding(
                             get: { cape.version },
                             set: { newValue in
                                 let oldValue = cape.version
@@ -254,12 +256,12 @@ struct CapeInfoView: View {
 
                     Divider()
 
-                    LabeledContent("Cursors") {
+                    LabeledContent(localization.localized("Cursors")) {
                         Text("\(cape.cursorCount)")
                             .foregroundStyle(.secondary)
                     }
 
-                    LabeledContent("File") {
+                    LabeledContent(localization.localized("File")) {
                         // Show current filename (updates after save)
                         Text(currentFilename)
                             .foregroundStyle(.secondary)
@@ -272,7 +274,7 @@ struct CapeInfoView: View {
 
                 // Cursor summary
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Cursors (\(cape.cursorCount))")
+                    Text("\(localization.localized("Cursors")) (\(cape.cursorCount))")
                         .font(.headline)
 
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 8) {
@@ -308,6 +310,7 @@ struct AddCursorSheet: View {
     let cape: CursorLibrary
     @Environment(\.dismiss) private var dismiss
     @Environment(AppState.self) private var appState
+    @Environment(LocalizationManager.self) private var localization
     @State private var selectedType: CursorType?
 
     // Filter out cursor types that already exist in the cape
@@ -318,7 +321,7 @@ struct AddCursorSheet: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Text("Add Cursor")
+            Text(localization.localized("Add Cursor"))
                 .font(.headline)
 
             cursorTypeList
@@ -336,9 +339,9 @@ struct AddCursorSheet: View {
     private var cursorTypeList: some View {
         if availableTypes.isEmpty {
             ContentUnavailableView(
-                "All Cursor Types Added",
+                localization.localized("All Cursor Types Added"),
                 systemImage: "checkmark.circle",
-                description: Text("This cape already contains all standard cursor types.")
+                description: Text(localization.localized("This cape already contains all standard cursor types."))
             )
         } else {
             ScrollView {
@@ -360,14 +363,14 @@ struct AddCursorSheet: View {
 
     private var buttonBar: some View {
         HStack {
-            Button("Cancel") {
+            Button(localization.localized("Cancel")) {
                 dismiss()
             }
             .keyboardShortcut(.cancelAction)
 
             Spacer()
 
-            Button("Add") {
+            Button(localization.localized("Add")) {
                 addSelectedCursor()
             }
             .keyboardShortcut(.defaultAction)
@@ -432,6 +435,7 @@ struct CursorListView: View {
     let cape: CursorLibrary
     @Binding var selection: Cursor?
     @Environment(AppState.self) private var appState
+    @Environment(LocalizationManager.self) private var localization
 
     var body: some View {
         @Bindable var appState = appState
@@ -440,11 +444,11 @@ struct CursorListView: View {
             CursorListRow(cursor: cursor, currentIdentifier: cursor.identifier)
                 .tag(cursor)
                 .contextMenu {
-                    Button("Duplicate") {
+                    Button(localization.localized("Duplicate")) {
                         duplicateCursor()
                     }
                     Divider()
-                    Button("Delete", role: .destructive) {
+                    Button(localization.localized("Delete"), role: .destructive) {
                         appState.showDeleteCursorConfirmation = true
                     }
                 }
@@ -481,6 +485,7 @@ struct CursorListRow: View {
     let cursor: Cursor
     /// Pass the identifier to force refresh when type changes
     var currentIdentifier: String?
+    @Environment(LocalizationManager.self) private var localization
 
     private var displayName: String {
         let identifier = currentIdentifier ?? cursor.identifier
@@ -516,7 +521,7 @@ struct CursorListRow: View {
                 Text(displayName)
                     .font(.headline)
                 if cursor.isAnimated {
-                    Text("\(cursor.frameCount) frames")
+                    Text("\(cursor.frameCount) \(localization.localized("frames"))")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -532,6 +537,7 @@ struct CursorDetailView: View {
     @Bindable var cursor: Cursor
     let cape: CursorLibrary
     @Environment(AppState.self) private var appState
+    @Environment(LocalizationManager.self) private var localization
     @State private var hotspotX: Double = 0
     @State private var hotspotY: Double = 0
     @State private var frameCount: Int = 1
@@ -593,7 +599,7 @@ struct CursorDetailView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     // Type section
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Type")
+                        Text(localization.localized("Type"))
                             .font(.headline)
 
                         Picker("", selection: $selectedType) {
@@ -637,7 +643,7 @@ struct CursorDetailView: View {
 
                     // Hotspot section
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Hotspot")
+                        Text(localization.localized("Hotspot"))
                             .font(.headline)
 
                         HStack(spacing: 16) {
@@ -709,11 +715,11 @@ struct CursorDetailView: View {
 
                     // Animation section
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Animation")
+                        Text(localization.localized("Animation"))
                             .font(.headline)
 
                         HStack {
-                            Text("Frames:")
+                            Text(localization.localized("Frames:"))
                             TextField("Frames", value: $frameCount, format: .number)
                                 .textFieldStyle(.roundedBorder)
                                 .frame(width: 60)
@@ -744,7 +750,7 @@ struct CursorDetailView: View {
                         }
 
                         HStack {
-                            Text("Speed:")
+                            Text(localization.localized("Speed:"))
                             TextField("Speed", value: $fps, format: .number.precision(.fractionLength(1)))
                                 .textFieldStyle(.roundedBorder)
                                 .frame(width: 60)
@@ -774,7 +780,7 @@ struct CursorDetailView: View {
                                         }
                                     )
                                 }
-                            Text("frames/sec")
+                            Text(localization.localized("frames/sec"))
                                 .foregroundStyle(.secondary)
                         }
 
@@ -832,6 +838,7 @@ struct CursorPreviewDropZone: View {
     @Bindable var cursor: Cursor
     var refreshTrigger: Int = 0
     @Environment(AppState.self) private var appState
+    @Environment(LocalizationManager.self) private var localization
     @State private var isTargeted = false
     @State private var showFilePicker = false
     @State private var localRefreshTrigger = 0
@@ -869,11 +876,11 @@ struct CursorPreviewDropZone: View {
                         .font(.system(size: 48))
                         .foregroundStyle(.tertiary)
 
-                    Text("Drag image or click to select")
+                    Text(localization.localized("Drag image or click to select"))
                         .font(.headline)
                         .foregroundStyle(.secondary)
 
-                    Text("Recommended: 64×64 px (HiDPI 2x)")
+                    Text(localization.localized("Recommended: 64×64 px (HiDPI 2x)"))
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
@@ -908,7 +915,7 @@ struct CursorPreviewDropZone: View {
         ) { result in
             handleFileImport(result)
         }
-        .help(hasImage ? "Click or drag to replace image" : "Click or drag to add image")
+        .help(hasImage ? localization.localized("Click or drag to replace image") : localization.localized("Click or drag to add image"))
     }
 
     private func handleURLDrop(_ urls: [URL]) -> Bool {
@@ -1228,27 +1235,28 @@ struct HelperToolSettingsView: View {
     @State private var isHelperInstalled = false
     @State private var showInstallAlert = false
     @State private var alertMessage = ""
-    @State private var alertTitle = "Helper Tool"
+    @State private var alertTitle = ""
+    @Environment(LocalizationManager.self) private var localization
 
     var body: some View {
-        Section("Helper Tool") {
+        Section(localization.localized("Helper Tool")) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Mousecape Helper")
+                    Text(localization.localized("Mousecape Helper"))
                         .font(.headline)
-                    Text(isHelperInstalled ? "Installed and running" : "Not installed")
+                    Text(isHelperInstalled ? localization.localized("Installed and running") : localization.localized("Not installed"))
                         .font(.caption)
                         .foregroundStyle(isHelperInstalled ? .green : .secondary)
                 }
 
                 Spacer()
 
-                Button(isHelperInstalled ? "Uninstall" : "Install") {
+                Button(isHelperInstalled ? localization.localized("Uninstall") : localization.localized("Install")) {
                     toggleHelper()
                 }
             }
 
-            Text("Once installed, the helper tool will automatically apply cursors at system startup without manually applying them.")
+            Text(localization.localized("Once installed, the helper tool will automatically apply cursors at system startup without manually applying them."))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -1256,7 +1264,7 @@ struct HelperToolSettingsView: View {
             checkHelperStatus()
         }
         .alert(alertTitle, isPresented: $showInstallAlert) {
-            Button("OK") { }
+            Button(localization.localized("OK")) { }
         } message: {
             Text(alertMessage)
         }
@@ -1275,16 +1283,16 @@ struct HelperToolSettingsView: View {
             if shouldInstall {
                 try service.register()
                 isHelperInstalled = true
-                alertTitle = "Success"
-                alertMessage = "The Mousecape helper was successfully installed."
+                alertTitle = localization.localized("Success")
+                alertMessage = localization.localized("The Mousecape helper was successfully installed.")
             } else {
                 try service.unregister()
                 isHelperInstalled = false
-                alertTitle = "Success"
-                alertMessage = "The Mousecape helper was successfully uninstalled."
+                alertTitle = localization.localized("Success")
+                alertMessage = localization.localized("The Mousecape helper was successfully uninstalled.")
             }
         } catch {
-            alertTitle = "Error"
+            alertTitle = localization.localized("Error")
             alertMessage = error.localizedDescription
         }
         showInstallAlert = true

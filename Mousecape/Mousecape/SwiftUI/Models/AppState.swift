@@ -673,7 +673,7 @@ final class AppState: @unchecked Sendable {
     private func processWindowsCursorFolderAsync(_ folderURL: URL) async {
         // Show loading overlay
         isLoading = true
-        loadingMessage = "Importing Windows cursors..."
+        loadingMessage = LocalizationManager.shared.localized("Importing Windows cursors...")
 
         do {
             // Convert all cursors in the folder asynchronously (doesn't block main thread)
@@ -681,7 +681,7 @@ final class AppState: @unchecked Sendable {
 
             if results.isEmpty {
                 isLoading = false
-                importResultMessage = "No valid cursor files found in the selected folder."
+                importResultMessage = LocalizationManager.shared.localized("No valid cursor files found in the selected folder.")
                 importResultIsSuccess = false
                 showImportResult = true
                 return
@@ -768,7 +768,7 @@ final class AppState: @unchecked Sendable {
 
             if importedCount == 0 {
                 isLoading = false
-                importResultMessage = "No cursors could be mapped to macOS cursor types."
+                importResultMessage = LocalizationManager.shared.localized("No cursors could be mapped to macOS cursor types.")
                 importResultIsSuccess = false
                 showImportResult = true
                 return
@@ -792,19 +792,19 @@ final class AppState: @unchecked Sendable {
 
                 // Show success message
                 isLoading = false
-                importResultMessage = "Successfully imported \(importedCount) cursor(s) from \(results.count) file(s)."
+                importResultMessage = "\(LocalizationManager.shared.localized("Successfully imported")) \(importedCount) \(LocalizationManager.shared.localized("cursor(s) from")) \(results.count) \(LocalizationManager.shared.localized("file(s)."))"
                 importResultIsSuccess = true
                 showImportResult = true
             } else {
                 isLoading = false
-                importResultMessage = "Failed to access library directory."
+                importResultMessage = LocalizationManager.shared.localized("Failed to access library directory.")
                 importResultIsSuccess = false
                 showImportResult = true
             }
 
         } catch {
             isLoading = false
-            importResultMessage = "Failed to import Windows cursors: \(error.localizedDescription)"
+            importResultMessage = "\(LocalizationManager.shared.localized("Failed to import Windows cursors:")) \(error.localizedDescription)"
             importResultIsSuccess = false
             showImportResult = true
         }

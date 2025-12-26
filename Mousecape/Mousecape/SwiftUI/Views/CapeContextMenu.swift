@@ -11,6 +11,7 @@ import SwiftUI
 struct CapeContextMenu: View {
     let cape: CursorLibrary
     @Environment(AppState.self) private var appState
+    @Environment(LocalizationManager.self) private var localization
 
     private var isApplied: Bool {
         appState.appliedCape?.id == cape.id
@@ -21,7 +22,7 @@ struct CapeContextMenu: View {
         Button {
             appState.applyCape(cape)
         } label: {
-            Label("Apply", systemImage: "checkmark.circle")
+            Label(localization.localized("Apply"), systemImage: "checkmark.circle")
         }
         .disabled(isApplied)
 
@@ -29,7 +30,7 @@ struct CapeContextMenu: View {
         Button {
             appState.editCape(cape)
         } label: {
-            Label("Edit", systemImage: "square.and.pencil")
+            Label(localization.localized("Edit"), systemImage: "square.and.pencil")
         }
 
         Divider()
@@ -38,14 +39,14 @@ struct CapeContextMenu: View {
         Button {
             appState.exportCape(cape)
         } label: {
-            Label("Export...", systemImage: "square.and.arrow.up")
+            Label(localization.localized("Export..."), systemImage: "square.and.arrow.up")
         }
 
         // Show in Finder
         Button {
             appState.showInFinder(cape)
         } label: {
-            Label("Show in Finder", systemImage: "folder")
+            Label(localization.localized("Show in Finder"), systemImage: "folder")
         }
 
         Divider()
@@ -54,7 +55,7 @@ struct CapeContextMenu: View {
         Button(role: .destructive) {
             appState.confirmDeleteCape(cape)
         } label: {
-            Label("Delete", systemImage: "trash")
+            Label(localization.localized("Delete"), systemImage: "trash")
         }
     }
 }

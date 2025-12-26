@@ -15,6 +15,7 @@ private let previewPanelScale: CGFloat = 1.5
 struct CapePreviewPanel: View {
     let cape: CursorLibrary
     @Environment(AppState.self) private var appState
+    @Environment(LocalizationManager.self) private var localization
     @State private var zoomedCursor: Cursor?
     @State private var cachedCursors: [Cursor] = []
     @Namespace private var cursorNamespace
@@ -39,7 +40,7 @@ struct CapePreviewPanel: View {
                                 }
                             }
                             if showAuthorInfo {
-                                Text("by \(cape.author)")
+                                Text("\(localization.localized("by")) \(cape.author)")
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             }
@@ -71,7 +72,7 @@ struct CapePreviewPanel: View {
 
                 // Bottom: Cursor count
                 HStack {
-                    Text(cape.summary)
+                    Text("\(cape.cursorCount) \(cape.cursorCount == 1 ? localization.localized("cursor") : localization.localized("cursors"))")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Spacer()
@@ -111,8 +112,10 @@ struct CapePreviewPanel: View {
 // MARK: - Applied Badge
 
 struct AppliedBadge: View {
+    @Environment(LocalizationManager.self) private var localization
+
     var body: some View {
-        Label("Applied", systemImage: "checkmark.circle.fill")
+        Label(localization.localized("Applied"), systemImage: "checkmark.circle.fill")
             .font(.caption2)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
@@ -127,6 +130,7 @@ struct CursorZoomOverlay: View {
     let namespace: Namespace.ID
     let onDismiss: () -> Void
     var showHotspot: Bool = false
+    @Environment(LocalizationManager.self) private var localization
 
     @State private var showDetails = false
 
@@ -156,7 +160,7 @@ struct CursorZoomOverlay: View {
                             .foregroundStyle(.secondary)
 
                         if cursor.frameCount > 1 {
-                            Text("\(cursor.frameCount) frames")
+                            Text("\(cursor.frameCount) \(localization.localized("frames"))")
                                 .font(.caption2)
                                 .foregroundStyle(.tertiary)
                         }

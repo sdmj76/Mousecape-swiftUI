@@ -54,8 +54,6 @@
 		FABA44D421D9D7D0009B10D9 /* NSBitmapImageRep+ColorSpace.m in Sources */ = {isa = PBXBuildFile; fileRef = FABA44D321D9D7D0009B10D9 /* NSBitmapImageRep+ColorSpace.m */; };
 		FABA44D521D9D947009B10D9 /* NSBitmapImageRep+ColorSpace.m in Sources */ = {isa = PBXBuildFile; fileRef = FABA44D321D9D7D0009B10D9 /* NSBitmapImageRep+ColorSpace.m */; };
 		FAC69F65189D603C00BC829D /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAC69F64189D603C00BC829D /* Cocoa.framework */; };
-		FAC69F6F189D603C00BC829D /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = FAC69F6D189D603C00BC829D /* InfoPlist.strings */; };
-		FAC69F75189D603C00BC829D /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = FAC69F73189D603C00BC829D /* Credits.rtf */; };
 		FAC69F7D189D603C00BC829D /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FAC69F7C189D603C00BC829D /* Images.xcassets */; };
 		FAC69FB1189D608900BC829D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = FAC69FB0189D608900BC829D /* main.m */; };
 		FAC69FD4189D609B00BC829D /* GBCommandLineParser.m in Sources */ = {isa = PBXBuildFile; fileRef = FAC69FCF189D609B00BC829D /* GBCommandLineParser.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
@@ -177,9 +175,7 @@
 		FAC69F68189D603C00BC829D /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		FAC69F69189D603C00BC829D /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		FAC69F6C189D603C00BC829D /* Mousecape-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Mousecape-Info.plist"; sourceTree = "<group>"; };
-		FAC69F6E189D603C00BC829D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		FAC69F72189D603C00BC829D /* Mousecape-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Mousecape-Prefix.pch"; sourceTree = "<group>"; };
-		FAC69F74189D603C00BC829D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
 		FAC69F7C189D603C00BC829D /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		FAC69F9D189D605300BC829D /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		FAC69FAD189D608900BC829D /* mousecloak */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mousecloak; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -401,9 +397,7 @@
 			isa = PBXGroup;
 			children = (
 				FAC69F6C189D603C00BC829D /* Mousecape-Info.plist */,
-				FAC69F6D189D603C00BC829D /* InfoPlist.strings */,
 				FAC69F72189D603C00BC829D /* Mousecape-Prefix.pch */,
-				FAC69F73189D603C00BC829D /* Credits.rtf */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -616,7 +610,6 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
-				Base,
 				no,
 			);
 			mainGroup = FAC69F58189D603C00BC829D;
@@ -636,11 +629,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FAC69F6F189D603C00BC829D /* InfoPlist.strings in Resources */,
 				DE525A8A2EFE93D500A315A3 /* curconvert.py in Resources */,
 				DE525A8B2EFE93D500A315A3 /* bundle_python.sh in Resources */,
 				FAC69F7D189D603C00BC829D /* Images.xcassets in Resources */,
-				FAC69F75189D603C00BC829D /* Credits.rtf in Resources */,
 				DE3661FC2EFAAAB600D94521 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -774,25 +765,6 @@
 			targetProxy = FA359846189DBEB700288163 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
-
-/* Begin PBXVariantGroup section */
-		FAC69F6D189D603C00BC829D /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				FAC69F6E189D603C00BC829D /* en */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		FAC69F73189D603C00BC829D /* Credits.rtf */ = {
-			isa = PBXVariantGroup;
-			children = (
-				FAC69F74189D603C00BC829D /* en */,
-			);
-			name = Credits.rtf;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		DE525A562EFE8C8E00A315A3 /* Debug-Dev */ = {
