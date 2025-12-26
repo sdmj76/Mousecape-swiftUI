@@ -255,6 +255,20 @@ final class AppState: @unchecked Sendable {
         appliedCape = cape
         // Save identifier for "Apply Last Cape on Launch" feature
         UserDefaults.standard.set(cape.identifier, forKey: "lastAppliedCapeIdentifier")
+        // Also write MCAppliedCursor for mousecloakhelper (ObjC helper daemon)
+        // Uses CFPreferences to write to current user + current host domain
+        CFPreferencesSetValue(
+            "MCAppliedCursor" as CFString,
+            cape.identifier as CFString,
+            "com.alexzielenski.Mousecape" as CFString,
+            kCFPreferencesCurrentUser,
+            kCFPreferencesCurrentHost
+        )
+        CFPreferencesSynchronize(
+            "com.alexzielenski.Mousecape" as CFString,
+            kCFPreferencesCurrentUser,
+            kCFPreferencesCurrentHost
+        )
     }
 
     /// Reset to default system cursors
@@ -263,6 +277,19 @@ final class AppState: @unchecked Sendable {
         appliedCape = nil
         // Clear last applied cape identifier
         UserDefaults.standard.removeObject(forKey: "lastAppliedCapeIdentifier")
+        // Also clear MCAppliedCursor for mousecloakhelper
+        CFPreferencesSetValue(
+            "MCAppliedCursor" as CFString,
+            nil,
+            "com.alexzielenski.Mousecape" as CFString,
+            kCFPreferencesCurrentUser,
+            kCFPreferencesCurrentHost
+        )
+        CFPreferencesSynchronize(
+            "com.alexzielenski.Mousecape" as CFString,
+            kCFPreferencesCurrentUser,
+            kCFPreferencesCurrentHost
+        )
     }
 
     /// Edit a cape
