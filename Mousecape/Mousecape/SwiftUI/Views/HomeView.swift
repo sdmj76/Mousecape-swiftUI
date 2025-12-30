@@ -20,8 +20,6 @@ struct HomeView: View {
     // MARK: - Home Toolbar Content
     @ToolbarContentBuilder
     private var homeToolbarContent: some ToolbarContent {
-        // Flexible spacer pushes buttons to the right
-        ToolbarSpacer(.flexible)
 
         // Group 1: New, Delete, Edit
         ToolbarItemGroup {
@@ -71,8 +69,6 @@ struct HomeView: View {
             .disabled(appState.selectedCape == nil)
         }
 
-        ToolbarSpacer(.fixed)
-
         // Group 2: Import, Export
         ToolbarItemGroup {
             Button(action: { appState.importCape() }) {
@@ -90,8 +86,6 @@ struct HomeView: View {
             .help(localization.localized("Export Cape"))
             .disabled(appState.selectedCape == nil)
         }
-
-        ToolbarSpacer(.fixed)
 
         // Standalone: Settings
         ToolbarItem {
@@ -149,7 +143,6 @@ struct HomeView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         }
         .focusedSceneValue(\.selectedCape, $appState.selectedCape)
         // Remove sidebar toggle button in edit mode
@@ -369,10 +362,7 @@ struct CapeIconCell: View {
         .frame(width: 64)
         .padding(.horizontal, 6)
         .padding(.vertical, 8)
-        .glassEffect(
-            isSelected ? .regular : (isHovered ? .regular : .clear),
-            in: RoundedRectangle(cornerRadius: 10)
-        )
+        .adaptiveGlassConditional(isActive: isSelected || isHovered, in: RoundedRectangle(cornerRadius: 10))
         .overlay(
             RoundedRectangle(cornerRadius: 10)
                 .strokeBorder(isSelected ? Color.accentColor : .clear, lineWidth: 2)

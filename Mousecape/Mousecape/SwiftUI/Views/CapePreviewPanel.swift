@@ -48,7 +48,7 @@ struct CapePreviewPanel: View {
                         Spacer()
                     }
                     .padding()
-                    .glassEffect(.clear, in: RoundedRectangle(cornerRadius: 12))
+                    .adaptiveGlassClear(in: RoundedRectangle(cornerRadius: 12))
                 }
                 .padding()
 
@@ -115,7 +115,7 @@ struct AppliedBadge: View {
             .font(.caption2)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .glassEffect(.regular.tint(.green), in: .capsule)
+            .adaptiveGlassTinted(color: .green, in: .capsule)
     }
 }
 
@@ -165,7 +165,7 @@ struct CursorZoomOverlay: View {
                 }
             }
             .padding(24)
-            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16))
+            .adaptiveGlass(in: RoundedRectangle(cornerRadius: 16))
             .shadow(radius: 20)
         }
         .contentShape(Rectangle())
@@ -274,10 +274,7 @@ struct CursorPreviewCell: View {
             }
         }
         .padding(8)
-        .glassEffect(
-            isHovered && !isZoomed ? .regular : .clear,
-            in: RoundedRectangle(cornerRadius: 8)
-        )
+        .adaptiveGlassConditional(isActive: isHovered && !isZoomed, in: RoundedRectangle(cornerRadius: 8))
         .opacity(isZoomed ? 0 : 1)
         .scaleEffect(isHovered && !isZoomed ? 1.1 : 1.0)
         .animation(.spring(duration: 0.2), value: isHovered)

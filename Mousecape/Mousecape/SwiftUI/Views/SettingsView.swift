@@ -40,8 +40,7 @@ struct SettingsView: View {
                 .help("Done")
             }
         }
-        .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
-    }
+        }
 
     @ViewBuilder
     private var settingsContent: some View {
@@ -236,7 +235,7 @@ struct AdvancedSettingsView: View {
                     }
                 }
                 LabeledContent(localization.localized("System Requirements")) {
-                    Text("macOS 26+")
+                    Text("macOS 15+")
                 }
                 LabeledContent(localization.localized("Original Author")) {
                     Text("\u{00A9} 2014-2025 Alex Zielenski")

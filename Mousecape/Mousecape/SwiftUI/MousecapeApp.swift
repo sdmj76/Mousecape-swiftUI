@@ -2,8 +2,8 @@
 //  MousecapeApp.swift
 //  Mousecape
 //
-//  SwiftUI App entry point for macOS 26+
-//  Single window architecture with Liquid Glass design
+//  SwiftUI App entry point for macOS 15+
+//  Single window architecture with modern design
 //
 
 import SwiftUI
@@ -35,12 +35,12 @@ struct MousecapeApp: App {
         DispatchQueue.main.async {
             guard let window = NSApp.windows.first else { return }
 
-            // Make titlebar transparent
+            // Make titlebar transparent for cleaner look
             window.titlebarAppearsTransparent = true
 
-            // Make window background transparent to show desktop wallpaper
-            window.isOpaque = false
-            window.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.9)
+            // Use opaque window background for macOS 15 (Liquid Glass transparency was for macOS 26)
+            window.isOpaque = true
+            window.backgroundColor = NSColor.windowBackgroundColor
 
             // Disable fullscreen (green) button
             window.collectionBehavior.remove(.fullScreenPrimary)
@@ -141,7 +141,7 @@ class WindowDelegate: NSObject, NSWindowDelegate {
 
 // MARK: - Toolbar Platter Hider
 
-/// Hides NSToolbarPlatterView (Liquid Glass background) in macOS 26
+/// Hides NSToolbarPlatterView (toolbar background) in macOS 15+
 enum ToolbarHider {
     @MainActor private static var timer: Timer?
 
