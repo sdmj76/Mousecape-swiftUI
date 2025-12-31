@@ -98,6 +98,37 @@ extension View {
     }
 }
 
+// MARK: - Adaptive Toolbar Spacer
+
+/// Adaptive toolbar spacer that uses ToolbarSpacer on macOS 26+
+/// On macOS 15, toolbar items are placed without explicit spacers
+struct AdaptiveToolbarSpacer: ToolbarContent {
+    enum SpacerType {
+        case flexible
+        case fixed
+    }
+
+    let type: SpacerType
+
+    init(_ type: SpacerType = .flexible) {
+        self.type = type
+    }
+
+    var body: some ToolbarContent {
+        if #available(macOS 26.0, *) {
+            switch type {
+            case .flexible:
+                ToolbarSpacer(.flexible)
+            case .fixed:
+                ToolbarSpacer(.fixed)
+            }
+        } else {
+            // On macOS 15, no spacer needed - toolbar handles layout automatically
+            ToolbarItem { EmptyView() }
+        }
+    }
+}
+
 // MARK: - Preview
 
 #Preview("Glass Effect Container") {

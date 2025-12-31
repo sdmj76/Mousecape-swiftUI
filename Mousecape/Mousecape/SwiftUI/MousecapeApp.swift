@@ -38,9 +38,16 @@ struct MousecapeApp: App {
             // Make titlebar transparent for cleaner look
             window.titlebarAppearsTransparent = true
 
-            // Use opaque window background for macOS 15 (Liquid Glass transparency was for macOS 26)
-            window.isOpaque = true
-            window.backgroundColor = NSColor.windowBackgroundColor
+            // Configure window background based on macOS version
+            // macOS 26+: Semi-transparent for Liquid Glass effect
+            // macOS 15: Opaque standard background
+            if #available(macOS 26.0, *) {
+                window.isOpaque = false
+                window.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.9)
+            } else {
+                window.isOpaque = true
+                window.backgroundColor = NSColor.windowBackgroundColor
+            }
 
             // Disable fullscreen (green) button
             window.collectionBehavior.remove(.fullScreenPrimary)

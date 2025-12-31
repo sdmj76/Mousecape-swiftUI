@@ -6,7 +6,7 @@
 
 Mousecape 是一款免费的 macOS 光标管理器，使用私有 CoreGraphics API 来自定义系统光标。它由三个构建目标组成，协同工作以应用和持久化自定义光标主题（"cape"）。
 
-**系统要求：** macOS Tahoe (26.0) 或更高版本
+**系统要求：** macOS Sequoia (15.0) 或更高版本
 
 ## 构建命令
 
@@ -29,7 +29,7 @@ xcodebuild -project Mousecape/Mousecape.xcodeproj -target mousecloak build
 
 1. **Mousecape**（GUI 应用）- 使用 SwiftUI 界面的主 macOS 应用程序
    - 入口：`Mousecape/SwiftUI/MousecapeApp.swift`
-   - 使用 macOS Tahoe 的液态玻璃设计语言
+   - 自适应设计：macOS 26+ 使用液态玻璃（Liquid Glass），macOS 15 使用 Material 背景
 
 2. **mousecloak**（CLI 工具）- 用于应用 cape 的命令行工具
    - 入口：`Mousecape/mousecloak/main.m`

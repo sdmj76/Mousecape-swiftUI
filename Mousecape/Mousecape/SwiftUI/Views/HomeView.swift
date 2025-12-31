@@ -20,6 +20,8 @@ struct HomeView: View {
     // MARK: - Home Toolbar Content
     @ToolbarContentBuilder
     private var homeToolbarContent: some ToolbarContent {
+        // Flexible spacer pushes buttons to the right (macOS 26+ only)
+        AdaptiveToolbarSpacer(.flexible)
 
         // Group 1: New, Delete, Edit
         ToolbarItemGroup {
@@ -69,6 +71,8 @@ struct HomeView: View {
             .disabled(appState.selectedCape == nil)
         }
 
+        AdaptiveToolbarSpacer(.fixed)
+
         // Group 2: Import, Export
         ToolbarItemGroup {
             Button(action: { appState.importCape() }) {
@@ -86,6 +90,8 @@ struct HomeView: View {
             .help(localization.localized("Export Cape"))
             .disabled(appState.selectedCape == nil)
         }
+
+        AdaptiveToolbarSpacer(.fixed)
 
         // Standalone: Settings
         ToolbarItem {
@@ -143,6 +149,7 @@ struct HomeView: View {
                 }
             }
             .scrollContentBackground(.hidden)
+            .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
         }
         .focusedSceneValue(\.selectedCape, $appState.selectedCape)
         // Remove sidebar toggle button in edit mode

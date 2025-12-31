@@ -40,7 +40,8 @@ struct SettingsView: View {
                 .help("Done")
             }
         }
-        }
+        .toolbarBackgroundVisibility(.hidden, for: .windowToolbar)
+    }
 
     @ViewBuilder
     private var settingsContent: some View {
