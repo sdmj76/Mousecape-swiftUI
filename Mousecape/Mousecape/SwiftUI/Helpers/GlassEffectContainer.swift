@@ -2,14 +2,13 @@
 //  GlassEffectContainer.swift
 //  Mousecape
 //
-//  Container for Liquid Glass effects in macOS 26+
-//  Groups multiple glass elements for shared background sampling
+//  Container for visual effects
+//  Uses Liquid Glass on macOS 26+, Material backgrounds on macOS 15
 //
 
 import SwiftUI
 
-/// Container that groups multiple glass effect elements
-/// Elements share background sampling for seamless appearance
+/// Container that groups multiple visual effect elements
 struct GlassEffectContainer<Content: View>: View {
     let spacing: CGFloat
     @ViewBuilder let content: Content
@@ -23,26 +22,79 @@ struct GlassEffectContainer<Content: View>: View {
         HStack(spacing: spacing) {
             content
         }
-        // In macOS 26, this would use .glassEffectContainer
-        // For now, we just group the elements
     }
 }
 
-// MARK: - Glass Effect Modifiers
+// MARK: - Adaptive Glass/Material Effect Modifiers
 
 extension View {
-    /// Apply Liquid Glass effect with default capsule shape
+    /// Apply glass effect on macOS 26+, material background on macOS 15
     @ViewBuilder
-    func glassButtonStyle() -> some View {
-        self.glassEffect(.regular.interactive(), in: .circle)
+    func adaptiveGlass(in shape: some Shape = RoundedRectangle(cornerRadius: 12)) -> some View {
+        if #available(macOS 26.0, *) {
+            self.glassEffect(.regular, in: shape)
+        } else {
+            self.background(.regularMaterial, in: shape)
+        }
     }
 
-    /// Apply Liquid Glass effect for toolbar buttons
+    /// Apply clear/subtle glass effect on macOS 26+, ultra thin material on macOS 15
+    @ViewBuilder
+    func adaptiveGlassClear(in shape: some Shape = RoundedRectangle(cornerRadius: 12)) -> some View {
+        if #available(macOS 26.0, *) {
+            self.glassEffect(.clear, in: shape)
+        } else {
+            self.background(.ultraThinMaterial, in: shape)
+        }
+    }
+
+    /// Apply tinted glass effect (e.g., for "Applied" badge)
+    @ViewBuilder
+    func adaptiveGlassTinted(color: Color, in shape: some Shape = .capsule) -> some View {
+        if #available(macOS 26.0, *) {
+            self.glassEffect(.regular.tint(color), in: shape)
+        } else {
+            self.background(color.opacity(0.2), in: shape)
+                .background(.regularMaterial, in: shape)
+        }
+    }
+
+    /// Apply conditional glass effect based on state (selected/hovered)
+    @ViewBuilder
+    func adaptiveGlassConditional(
+        isActive: Bool,
+        in shape: some Shape = RoundedRectangle(cornerRadius: 10)
+    ) -> some View {
+        if #available(macOS 26.0, *) {
+            self.glassEffect(isActive ? .regular : .clear, in: shape)
+        } else {
+            self.background(
+                isActive ? AnyShapeStyle(.regularMaterial) : AnyShapeStyle(.clear),
+                in: shape
+            )
+        }
+    }
+
+    /// Apply glass button style
+    @ViewBuilder
+    func glassButtonStyle() -> some View {
+        if #available(macOS 26.0, *) {
+            self.glassEffect(.regular.interactive(), in: .circle)
+        } else {
+            self.background(.regularMaterial, in: .circle)
+        }
+    }
+
+    /// Apply toolbar glass button style
     @ViewBuilder
     func toolbarGlassButton() -> some View {
-        self
-            .buttonStyle(.borderless)
-            .glassEffect(.regular.interactive(), in: .circle)
+        if #available(macOS 26.0, *) {
+            self.buttonStyle(.borderless)
+                .glassEffect(.regular.interactive(), in: .circle)
+        } else {
+            self.buttonStyle(.borderless)
+                .background(.regularMaterial, in: .circle)
+        }
     }
 }
 
@@ -53,17 +105,17 @@ extension View {
         Button(action: {}) {
             Image(systemName: "plus")
         }
-        .glassEffect(.regular.interactive(), in: .circle)
+        .glassButtonStyle()
 
         Button(action: {}) {
             Image(systemName: "minus")
         }
-        .glassEffect(.regular.interactive(), in: .circle)
+        .glassButtonStyle()
 
         Button(action: {}) {
             Image(systemName: "pencil")
         }
-        .glassEffect(.regular.interactive(), in: .circle)
+        .glassButtonStyle()
     }
     .padding()
     .background(
