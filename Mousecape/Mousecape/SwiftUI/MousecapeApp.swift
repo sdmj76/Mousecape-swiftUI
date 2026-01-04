@@ -38,10 +38,9 @@ struct MousecapeApp: App {
             // Make titlebar transparent for cleaner look
             window.titlebarAppearsTransparent = true
 
-            // Configure window background based on macOS version
-            // macOS 26+: Semi-transparent for Liquid Glass effect
-            // macOS 15: Opaque standard background
-            if #available(macOS 26.0, *) {
+            // Configure window background based on user's transparentWindow setting
+            let transparentWindow = UserDefaults.standard.bool(forKey: "transparentWindow")
+            if transparentWindow {
                 window.isOpaque = false
                 window.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.9)
             } else {
