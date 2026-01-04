@@ -25,6 +25,7 @@ struct WindowsINFParser {
     /// INF cursor key to macOS cursor type mapping
     /// These keys come from the [Strings] section of install.inf
     /// Based on Mac-Windows cursor comparison table
+    /// Note: Some INF files use alternate key names (e.g., "work" vs "working", "cross" vs "precision")
     static let infKeyToMacOS: [String: [CursorType]] = [
         // Direct mappings from comparison table
         "pointer": [.arrow],           // Arrow
@@ -32,7 +33,9 @@ struct WindowsINFParser {
         "link": [.pointing],           // Pointing (Hand/Link cursor)
         "busy": [.busy],               // Busy (Wait in registry)
         "working": [.wait],            // Wait (AppStarting in registry)
+        "work": [.wait],               // Alternate name for Wait
         "precision": [.crosshair],     // Crosshair
+        "cross": [.crosshair],         // Alternate name for Crosshair
         "unavailable": [.forbidden],   // Forbidden
         "vert": [.resizeNS, .windowNS], // Resize N-S and Window N-S
         "horz": [.resizeWE, .windowEW], // Resize W-E and Window W-E
@@ -41,7 +44,7 @@ struct WindowsINFParser {
         "move": [.move],               // Move
         "help": [.help],               // Help
         // Windows-only cursors (no macOS equivalent) - skipped:
-        // "alternate" (UpArrow), "hand" (NWPen/Handwriting), "person", "pin"
+        // "alternate" (UpArrow), "hand" (NWPen/Handwriting), "person", "pin", "location"
     ]
 
     /// Parse an install.inf file
