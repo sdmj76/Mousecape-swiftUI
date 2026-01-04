@@ -91,6 +91,35 @@ final class WindowsCursorConverter: @unchecked Sendable {
         return results
     }
 
+    /// Convert cursor files in a folder using INF mapping
+    /// - Parameters:
+    ///   - folderURL: URL to folder containing .cur/.ani files and install.inf
+    ///   - infMapping: Parsed INF mapping from install.inf
+    /// - Returns: Array of (infKey, result) tuples for successful conversions
+    func convertFolderWithINF(folderURL: URL, infMapping: WindowsINFMapping) throws -> [(infKey: String, result: WindowsCursorResult)] {
+        var results: [(infKey: String, result: WindowsCursorResult)] = []
+
+        for (infKey, filename) in infMapping.cursorFiles {
+            let fileURL = folderURL.appendingPathComponent(filename)
+
+            // Check if file exists
+            guard FileManager.default.fileExists(atPath: fileURL.path) else {
+                print("INF referenced file not found: \(filename)")
+                continue
+            }
+
+            // Convert the file
+            do {
+                let result = try convert(fileURL: fileURL)
+                results.append((infKey: infKey, result: result))
+            } catch {
+                print("Failed to convert \(filename): \(error.localizedDescription)")
+            }
+        }
+
+        return results
+    }
+
     // MARK: - Async Public API
 
     /// Convert all cursor files in a folder asynchronously
@@ -101,6 +130,24 @@ final class WindowsCursorConverter: @unchecked Sendable {
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
                     let results = try self.convertFolder(folderURL: folderURL)
+                    continuation.resume(returning: results)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    /// Convert cursor files in a folder asynchronously using INF mapping
+    /// - Parameters:
+    ///   - folderURL: URL to folder containing .cur/.ani files and install.inf
+    ///   - infMapping: Parsed INF mapping from install.inf
+    /// - Returns: Array of (infKey, result) tuples for successful conversions
+    func convertFolderWithINFAsync(folderURL: URL, infMapping: WindowsINFMapping) async throws -> [(infKey: String, result: WindowsCursorResult)] {
+        return try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let results = try self.convertFolderWithINF(folderURL: folderURL, infMapping: infMapping)
                     continuation.resume(returning: results)
                 } catch {
                     continuation.resume(throwing: error)
