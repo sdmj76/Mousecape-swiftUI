@@ -143,6 +143,7 @@ struct AppearanceSettingsView: View {
     @AppStorage("showPreviewAnimations") private var showPreviewAnimations = true
     @AppStorage("showAuthorInfo") private var showAuthorInfo = true
     @AppStorage("previewGridColumns") private var previewGridColumns = 0
+    @AppStorage("transparentWindow") private var transparentWindow = false
     @Environment(LocalizationManager.self) private var localization
 
     var body: some View {
@@ -156,6 +157,14 @@ struct AppearanceSettingsView: View {
                     Text(localization.localized("Dark")).tag(2)
                 }
                 .pickerStyle(.radioGroup)
+
+                Toggle(localization.localized("Transparent Window"), isOn: $transparentWindow)
+                    .onChange(of: transparentWindow) { _, newValue in
+                        updateWindowTransparency(newValue)
+                    }
+                Text(localization.localized("Enable semi-transparent window background"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section(localization.localized("Language")) {
@@ -184,6 +193,18 @@ struct AppearanceSettingsView: View {
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
         .navigationTitle(localization.localized("Appearance"))
+    }
+
+    /// Update window transparency in real-time
+    private func updateWindowTransparency(_ transparent: Bool) {
+        guard let window = NSApp.windows.first else { return }
+        if transparent {
+            window.isOpaque = false
+            window.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.9)
+        } else {
+            window.isOpaque = true
+            window.backgroundColor = NSColor.windowBackgroundColor
+        }
     }
 }
 
@@ -236,7 +257,7 @@ struct AdvancedSettingsView: View {
                     }
                 }
                 LabeledContent(localization.localized("System Requirements")) {
-                    Text("macOS 26+")
+                    Text("macOS 15+")
                 }
                 LabeledContent(localization.localized("Original Author")) {
                     Text("\u{00A9} 2014-2025 Alex Zielenski")

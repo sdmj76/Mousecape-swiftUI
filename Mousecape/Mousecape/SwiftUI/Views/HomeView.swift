@@ -20,8 +20,8 @@ struct HomeView: View {
     // MARK: - Home Toolbar Content
     @ToolbarContentBuilder
     private var homeToolbarContent: some ToolbarContent {
-        // Flexible spacer pushes buttons to the right
-        ToolbarSpacer(.flexible)
+        // Flexible spacer pushes buttons to the right (macOS 26+ only)
+        AdaptiveToolbarSpacer(.flexible)
 
         // Group 1: New, Delete, Edit
         ToolbarItemGroup {
@@ -69,7 +69,7 @@ struct HomeView: View {
             .disabled(appState.selectedCape == nil)
         }
 
-        ToolbarSpacer(.fixed)
+        AdaptiveToolbarSpacer(.fixed)
 
         // Group 2: Import, Export
         ToolbarItemGroup {
@@ -89,7 +89,7 @@ struct HomeView: View {
             .disabled(appState.selectedCape == nil)
         }
 
-        ToolbarSpacer(.fixed)
+        AdaptiveToolbarSpacer(.fixed)
 
         // Standalone: Settings
         ToolbarItem {
@@ -367,10 +367,7 @@ struct CapeIconCell: View {
         .frame(width: 64)
         .padding(.horizontal, 6)
         .padding(.vertical, 8)
-        .glassEffect(
-            isSelected ? .regular : (isHovered ? .regular : .clear),
-            in: RoundedRectangle(cornerRadius: 10)
-        )
+        .adaptiveGlassConditional(isActive: isSelected || isHovered, in: RoundedRectangle(cornerRadius: 10))
         .overlay(
             RoundedRectangle(cornerRadius: 10)
                 .strokeBorder(isSelected ? Color.accentColor : .clear, lineWidth: 2)

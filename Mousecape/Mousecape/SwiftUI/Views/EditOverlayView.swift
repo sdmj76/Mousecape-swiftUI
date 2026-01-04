@@ -55,8 +55,8 @@ struct EditDetailContent: View {
         }
         // Edit mode toolbar (navigationTitle is now in HomeView)
         .toolbar {
-            // Flexible spacer pushes buttons to the right
-            ToolbarSpacer(.flexible)
+            // Flexible spacer pushes buttons to the right (macOS 26+ only)
+            AdaptiveToolbarSpacer(.flexible)
 
             // Main action buttons group
             ToolbarItemGroup {
@@ -86,7 +86,7 @@ struct EditDetailContent: View {
                 .help(localization.localized("Cape Info"))
             }
 
-            ToolbarSpacer(.fixed)
+            AdaptiveToolbarSpacer(.fixed)
 
             // Done button (rightmost, standalone with green color)
             ToolbarItem {
@@ -271,7 +271,7 @@ struct CapeInfoView: View {
                     }
                 }
                 .padding()
-                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 12))
+                .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12))
 
                 // Cursor summary
                 VStack(alignment: .leading, spacing: 12) {
@@ -298,7 +298,7 @@ struct CapeInfoView: View {
                     }
                 }
                 .padding()
-                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 12))
+                .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12))
             }
             .padding()
         }
@@ -358,7 +358,7 @@ struct AddCursorSheet: View {
                 .padding(8)
             }
             .frame(height: 300)
-            .glassEffect(.regular.tint(.clear), in: RoundedRectangle(cornerRadius: 12))
+            .adaptiveGlassClear(in: RoundedRectangle(cornerRadius: 12))
         }
     }
 
@@ -794,7 +794,7 @@ struct CursorDetailView: View {
                     }
                 }
                 .padding()
-                .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 12))
+                .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12))
             }
             .padding()
         }
@@ -898,7 +898,7 @@ struct CursorPreviewDropZone: View {
         }
         .frame(height: 200)
         .frame(maxWidth: .infinity)
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 16))
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 16))
         .contentShape(Rectangle())
         .onTapGesture {
             showFilePicker = true

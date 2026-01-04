@@ -11,7 +11,7 @@ A free macOS cursor manager that allows you to easily replace Mac system pointer
 
 Built with SwiftUI, fully adapted to Liquid Glass design language, with complete support for macOS Tahoe.
 
-**System Requirements: macOS Tahoe (26) or later**
+**System Requirements: macOS Sequoia (15) or later**
 
 ![Home](Screenshot/Home_en.png)
 ![Edit](Screenshot/Edit_en.png)
@@ -200,7 +200,7 @@ This is just a tool, and I've polished its UI. But what matters most is your cur
 
 使用 SwiftUI 构建，全面适配液态玻璃设计语言，完整支持 macOS Tahoe。
 
-**系统要求：macOS Tahoe (26) 或更高版本**
+**系统要求：macOS Sequoia (15) 或更高版本**
 
 ![主页](Screenshot/Home_zh.png)
 ![编辑](Screenshot/Edit_zh.png)
