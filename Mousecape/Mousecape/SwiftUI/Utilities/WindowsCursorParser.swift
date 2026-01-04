@@ -530,32 +530,355 @@ struct WindowsCursorParser {
     private static func decodeBMPCursor(data: Data, width: Int, height: Int) throws -> CGImage {
         var reader = BinaryReader(data)
 
-        // Read BITMAPINFOHEADER
+        // Read BITMAPINFOHEADER (40 bytes standard)
         let headerSize = try reader.readUInt32()
         let bmpWidth = Int(try reader.readInt32())
         let bmpHeight = Int(try reader.readInt32())  // Doubled for XOR+AND masks
         let _ = try reader.readUInt16() // planes (unused)
         let bitCount = try reader.readUInt16()
-        let _ = try reader.readUInt32() // compression (unused)
+        let compression = try reader.readUInt32()
+        let _ = try reader.readUInt32() // imageSize
+        let _ = try reader.readInt32()  // xPelsPerMeter
+        let _ = try reader.readInt32()  // yPelsPerMeter
+        let clrUsed = try reader.readUInt32()  // biClrUsed - actual number of colors in palette
+        let _ = try reader.readUInt32() // clrImportant
 
-        // Skip rest of header
-        if headerSize > 20 {
-            try reader.skip(Int(headerSize) - 20)
+        // Skip any remaining header bytes (for BITMAPV4/V5 headers)
+        if headerSize > 40 {
+            try reader.skip(Int(headerSize) - 40)
         }
 
         // Actual height is half (top half is XOR, bottom half is AND)
         let actualHeight = abs(bmpHeight) / 2
         let actualWidth = bmpWidth > 0 ? bmpWidth : width
 
+        // Calculate actual palette size
+        let paletteSize: Int
+        if bitCount <= 8 {
+            if clrUsed > 0 {
+                paletteSize = Int(clrUsed)
+            } else {
+                paletteSize = 1 << Int(bitCount)  // 2^bitCount
+            }
+        } else {
+            paletteSize = 0
+        }
+
+        // Handle RLE compression
+        if compression == 1 && bitCount == 8 {
+            // RLE8 compression
+            return try decodeRLE8BMP(reader: &reader, width: actualWidth, height: actualHeight, paletteSize: paletteSize)
+        } else if compression == 2 && bitCount == 4 {
+            // RLE4 compression
+            return try decodeRLE4BMP(reader: &reader, width: actualWidth, height: actualHeight, paletteSize: paletteSize)
+        }
+
         switch bitCount {
         case 32:
             return try decode32BitBMP(reader: &reader, width: actualWidth, height: actualHeight)
         case 24:
             return try decode24BitBMP(reader: &reader, width: actualWidth, height: actualHeight)
+        case 16:
+            return try decode16BitBMP(reader: &reader, width: actualWidth, height: actualHeight, compression: compression)
+        case 8:
+            return try decode8BitBMP(reader: &reader, width: actualWidth, height: actualHeight, paletteSize: paletteSize)
+        case 4:
+            return try decode4BitBMP(reader: &reader, width: actualWidth, height: actualHeight, paletteSize: paletteSize)
+        case 1:
+            return try decode1BitBMP(reader: &reader, width: actualWidth, height: actualHeight, paletteSize: paletteSize)
         default:
             // For other bit depths, try using ImageIO with a BMP header wrapper
             return try decodeBMPWithHeader(data: data, width: width, height: height)
         }
+    }
+
+    /// Decode 16-bit RGB BMP (RGB555 or RGB565)
+    private static func decode16BitBMP(reader: inout BinaryReader, width: Int, height: Int, compression: UInt32) throws -> CGImage {
+        let rowSize = ((width * 2 + 3) / 4) * 4  // Padded to 4 bytes
+        let padding = rowSize - width * 2
+
+        var pixelData = Data(count: width * height * 4)
+
+        // Determine format: compression=0 is RGB555, compression=3 is bitfields (usually RGB565)
+        let isRGB565 = (compression == 3)
+
+        // Read color data (bottom-to-top)
+        for y in 0..<height {
+            let targetY = height - 1 - y
+
+            for x in 0..<width {
+                let pixel = try reader.readUInt16()
+
+                let r: UInt8
+                let g: UInt8
+                let b: UInt8
+
+                if isRGB565 {
+                    // RGB565: RRRRRGGGGGGBBBBB
+                    r = UInt8((pixel >> 11) & 0x1F) << 3
+                    g = UInt8((pixel >> 5) & 0x3F) << 2
+                    b = UInt8(pixel & 0x1F) << 3
+                } else {
+                    // RGB555: XRRRRRGGGGGBBBBB
+                    r = UInt8((pixel >> 10) & 0x1F) << 3
+                    g = UInt8((pixel >> 5) & 0x1F) << 3
+                    b = UInt8(pixel & 0x1F) << 3
+                }
+
+                let offset = (targetY * width + x) * 4
+                pixelData[offset] = r
+                pixelData[offset + 1] = g
+                pixelData[offset + 2] = b
+                pixelData[offset + 3] = 255
+            }
+
+            // Skip padding
+            if padding > 0 {
+                try reader.skip(padding)
+            }
+        }
+
+        // Read AND mask (1-bit transparency)
+        let andRowSize = ((width + 31) / 32) * 4
+
+        for y in 0..<height {
+            let targetY = height - 1 - y
+
+            for byteIndex in 0..<andRowSize {
+                let maskByte: UInt8
+                if reader.remaining > 0 {
+                    maskByte = try reader.readUInt8()
+                } else {
+                    break
+                }
+
+                for bit in 0..<8 {
+                    let x = byteIndex * 8 + bit
+                    if x >= width { break }
+
+                    let isTransparent = (maskByte >> (7 - bit)) & 1 == 1
+                    if isTransparent {
+                        let offset = (targetY * width + x) * 4
+                        pixelData[offset + 3] = 0
+                    }
+                }
+            }
+        }
+
+        return try createCGImage(from: pixelData, width: width, height: height)
+    }
+
+    /// Decode RLE8 compressed 8-bit BMP
+    private static func decodeRLE8BMP(reader: inout BinaryReader, width: Int, height: Int, paletteSize: Int) throws -> CGImage {
+        // Read color palette
+        let actualPaletteSize = paletteSize > 0 ? min(paletteSize, 256) : 256
+        var palette: [(r: UInt8, g: UInt8, b: UInt8, a: UInt8)] = []
+        for _ in 0..<actualPaletteSize {
+            let b = try reader.readUInt8()
+            let g = try reader.readUInt8()
+            let r = try reader.readUInt8()
+            let _ = try reader.readUInt8()
+            palette.append((r: r, g: g, b: b, a: 255))
+        }
+
+        var pixelData = Data(repeating: 0, count: width * height * 4)
+        var x = 0
+        var y = height - 1  // Start from bottom
+
+        while reader.remaining >= 2 {
+            let count = Int(try reader.readUInt8())
+            let value = try reader.readUInt8()
+
+            if count > 0 {
+                // Encoded mode: repeat 'value' 'count' times
+                let color = Int(value) < palette.count ? palette[Int(value)] : (r: UInt8(0), g: UInt8(0), b: UInt8(0), a: UInt8(255))
+                for _ in 0..<count {
+                    if x < width && y >= 0 {
+                        let offset = (y * width + x) * 4
+                        pixelData[offset] = color.r
+                        pixelData[offset + 1] = color.g
+                        pixelData[offset + 2] = color.b
+                        pixelData[offset + 3] = color.a
+                        x += 1
+                    }
+                }
+            } else {
+                // Escape mode
+                switch value {
+                case 0:
+                    // End of line
+                    x = 0
+                    y -= 1
+                case 1:
+                    // End of bitmap
+                    break
+                case 2:
+                    // Delta
+                    if reader.remaining >= 2 {
+                        let dx = Int(try reader.readUInt8())
+                        let dy = Int(try reader.readUInt8())
+                        x += dx
+                        y -= dy
+                    }
+                default:
+                    // Absolute mode: 'value' literal bytes follow
+                    let literalCount = Int(value)
+                    for _ in 0..<literalCount {
+                        if reader.remaining > 0 && x < width && y >= 0 {
+                            let index = Int(try reader.readUInt8())
+                            let color = index < palette.count ? palette[index] : (r: UInt8(0), g: UInt8(0), b: UInt8(0), a: UInt8(255))
+                            let offset = (y * width + x) * 4
+                            pixelData[offset] = color.r
+                            pixelData[offset + 1] = color.g
+                            pixelData[offset + 2] = color.b
+                            pixelData[offset + 3] = color.a
+                            x += 1
+                        }
+                    }
+                    // Padding to word boundary
+                    if literalCount % 2 == 1 && reader.remaining > 0 {
+                        _ = try reader.readUInt8()
+                    }
+                }
+            }
+        }
+
+        // Read AND mask
+        let andRowSize = ((width + 31) / 32) * 4
+        for row in 0..<height {
+            let targetY = height - 1 - row
+            for byteIndex in 0..<andRowSize {
+                if reader.remaining > 0 {
+                    let maskByte = try reader.readUInt8()
+                    for bit in 0..<8 {
+                        let px = byteIndex * 8 + bit
+                        if px >= width { break }
+                        let isTransparent = (maskByte >> (7 - bit)) & 1 == 1
+                        if isTransparent {
+                            let offset = (targetY * width + px) * 4
+                            pixelData[offset + 3] = 0
+                        }
+                    }
+                }
+            }
+        }
+
+        return try createCGImage(from: pixelData, width: width, height: height)
+    }
+
+    /// Decode RLE4 compressed 4-bit BMP
+    private static func decodeRLE4BMP(reader: inout BinaryReader, width: Int, height: Int, paletteSize: Int) throws -> CGImage {
+        // Read color palette
+        let actualPaletteSize = paletteSize > 0 ? min(paletteSize, 16) : 16
+        var palette: [(r: UInt8, g: UInt8, b: UInt8, a: UInt8)] = []
+        for _ in 0..<actualPaletteSize {
+            let b = try reader.readUInt8()
+            let g = try reader.readUInt8()
+            let r = try reader.readUInt8()
+            let _ = try reader.readUInt8()
+            palette.append((r: r, g: g, b: b, a: 255))
+        }
+
+        var pixelData = Data(repeating: 0, count: width * height * 4)
+        var x = 0
+        var y = height - 1
+
+        while reader.remaining >= 2 {
+            let count = Int(try reader.readUInt8())
+            let value = try reader.readUInt8()
+
+            if count > 0 {
+                // Encoded mode: alternate between high and low nibbles
+                let highIndex = Int((value >> 4) & 0x0F)
+                let lowIndex = Int(value & 0x0F)
+                let highColor = highIndex < palette.count ? palette[highIndex] : (r: UInt8(0), g: UInt8(0), b: UInt8(0), a: UInt8(255))
+                let lowColor = lowIndex < palette.count ? palette[lowIndex] : (r: UInt8(0), g: UInt8(0), b: UInt8(0), a: UInt8(255))
+
+                for i in 0..<count {
+                    if x < width && y >= 0 {
+                        let color = (i % 2 == 0) ? highColor : lowColor
+                        let offset = (y * width + x) * 4
+                        pixelData[offset] = color.r
+                        pixelData[offset + 1] = color.g
+                        pixelData[offset + 2] = color.b
+                        pixelData[offset + 3] = color.a
+                        x += 1
+                    }
+                }
+            } else {
+                switch value {
+                case 0:
+                    x = 0
+                    y -= 1
+                case 1:
+                    break
+                case 2:
+                    if reader.remaining >= 2 {
+                        let dx = Int(try reader.readUInt8())
+                        let dy = Int(try reader.readUInt8())
+                        x += dx
+                        y -= dy
+                    }
+                default:
+                    // Absolute mode
+                    let literalCount = Int(value)
+                    let bytesToRead = (literalCount + 1) / 2
+                    for i in 0..<bytesToRead {
+                        if reader.remaining > 0 {
+                            let byte = try reader.readUInt8()
+                            let highIndex = Int((byte >> 4) & 0x0F)
+                            let lowIndex = Int(byte & 0x0F)
+
+                            if x < width && y >= 0 && i * 2 < literalCount {
+                                let color = highIndex < palette.count ? palette[highIndex] : (r: UInt8(0), g: UInt8(0), b: UInt8(0), a: UInt8(255))
+                                let offset = (y * width + x) * 4
+                                pixelData[offset] = color.r
+                                pixelData[offset + 1] = color.g
+                                pixelData[offset + 2] = color.b
+                                pixelData[offset + 3] = color.a
+                                x += 1
+                            }
+
+                            if x < width && y >= 0 && i * 2 + 1 < literalCount {
+                                let color = lowIndex < palette.count ? palette[lowIndex] : (r: UInt8(0), g: UInt8(0), b: UInt8(0), a: UInt8(255))
+                                let offset = (y * width + x) * 4
+                                pixelData[offset] = color.r
+                                pixelData[offset + 1] = color.g
+                                pixelData[offset + 2] = color.b
+                                pixelData[offset + 3] = color.a
+                                x += 1
+                            }
+                        }
+                    }
+                    // Padding to word boundary
+                    if bytesToRead % 2 == 1 && reader.remaining > 0 {
+                        _ = try reader.readUInt8()
+                    }
+                }
+            }
+        }
+
+        // Read AND mask
+        let andRowSize = ((width + 31) / 32) * 4
+        for row in 0..<height {
+            let targetY = height - 1 - row
+            for byteIndex in 0..<andRowSize {
+                if reader.remaining > 0 {
+                    let maskByte = try reader.readUInt8()
+                    for bit in 0..<8 {
+                        let px = byteIndex * 8 + bit
+                        if px >= width { break }
+                        let isTransparent = (maskByte >> (7 - bit)) & 1 == 1
+                        if isTransparent {
+                            let offset = (targetY * width + px) * 4
+                            pixelData[offset + 3] = 0
+                        }
+                    }
+                }
+            }
+        }
+
+        return try createCGImage(from: pixelData, width: width, height: height)
     }
 
     /// Decode 32-bit BGRA BMP
@@ -577,6 +900,232 @@ struct WindowsCursorParser {
                 pixelData[offset + 1] = g
                 pixelData[offset + 2] = b
                 pixelData[offset + 3] = a
+            }
+        }
+
+        return try createCGImage(from: pixelData, width: width, height: height)
+    }
+
+    /// Decode 8-bit paletted BMP with AND mask
+    private static func decode8BitBMP(reader: inout BinaryReader, width: Int, height: Int, paletteSize: Int) throws -> CGImage {
+        // Read color palette (up to 256 colors, BGRA format)
+        let actualPaletteSize = paletteSize > 0 ? min(paletteSize, 256) : 256
+        var palette: [(r: UInt8, g: UInt8, b: UInt8, a: UInt8)] = []
+        for _ in 0..<actualPaletteSize {
+            let b = try reader.readUInt8()
+            let g = try reader.readUInt8()
+            let r = try reader.readUInt8()
+            let _ = try reader.readUInt8() // reserved/alpha (usually 0)
+            palette.append((r: r, g: g, b: b, a: 255))
+        }
+
+        let rowSize = ((width + 3) / 4) * 4  // Padded to 4 bytes
+        let padding = rowSize - width
+
+        var pixelData = Data(count: width * height * 4)
+
+        // Read indexed color data (bottom-to-top)
+        for y in 0..<height {
+            let targetY = height - 1 - y
+
+            for x in 0..<width {
+                let index = Int(try reader.readUInt8())
+                let color = index < palette.count ? palette[index] : (r: UInt8(0), g: UInt8(0), b: UInt8(0), a: UInt8(255))
+
+                let offset = (targetY * width + x) * 4
+                pixelData[offset] = color.r
+                pixelData[offset + 1] = color.g
+                pixelData[offset + 2] = color.b
+                pixelData[offset + 3] = color.a
+            }
+
+            // Skip padding
+            if padding > 0 {
+                try reader.skip(padding)
+            }
+        }
+
+        // Read AND mask (1-bit transparency)
+        let andRowSize = ((width + 31) / 32) * 4
+
+        for y in 0..<height {
+            let targetY = height - 1 - y
+
+            for byteIndex in 0..<andRowSize {
+                let maskByte: UInt8
+                if reader.remaining > 0 {
+                    maskByte = try reader.readUInt8()
+                } else {
+                    break
+                }
+
+                for bit in 0..<8 {
+                    let x = byteIndex * 8 + bit
+                    if x >= width { break }
+
+                    let isTransparent = (maskByte >> (7 - bit)) & 1 == 1
+                    if isTransparent {
+                        let offset = (targetY * width + x) * 4
+                        pixelData[offset + 3] = 0  // Set alpha to 0
+                    }
+                }
+            }
+        }
+
+        return try createCGImage(from: pixelData, width: width, height: height)
+    }
+
+    /// Decode 4-bit paletted BMP with AND mask
+    private static func decode4BitBMP(reader: inout BinaryReader, width: Int, height: Int, paletteSize: Int) throws -> CGImage {
+        // Read color palette (up to 16 colors, BGRA format)
+        let actualPaletteSize = paletteSize > 0 ? min(paletteSize, 16) : 16
+        var palette: [(r: UInt8, g: UInt8, b: UInt8, a: UInt8)] = []
+        for _ in 0..<actualPaletteSize {
+            let b = try reader.readUInt8()
+            let g = try reader.readUInt8()
+            let r = try reader.readUInt8()
+            let _ = try reader.readUInt8() // reserved
+            palette.append((r: r, g: g, b: b, a: 255))
+        }
+
+        let rowSize = ((width * 4 + 31) / 32) * 4  // Bits to bytes, padded to 4 bytes
+
+        var pixelData = Data(count: width * height * 4)
+
+        // Read indexed color data (bottom-to-top)
+        for y in 0..<height {
+            let targetY = height - 1 - y
+            var x = 0
+            var bytesRead = 0
+
+            while x < width {
+                let byte = try reader.readUInt8()
+                bytesRead += 1
+
+                // High nibble first
+                let highIndex = Int((byte >> 4) & 0x0F)
+                if x < width {
+                    let color = highIndex < palette.count ? palette[highIndex] : (r: UInt8(0), g: UInt8(0), b: UInt8(0), a: UInt8(255))
+                    let offset = (targetY * width + x) * 4
+                    pixelData[offset] = color.r
+                    pixelData[offset + 1] = color.g
+                    pixelData[offset + 2] = color.b
+                    pixelData[offset + 3] = color.a
+                    x += 1
+                }
+
+                // Low nibble
+                let lowIndex = Int(byte & 0x0F)
+                if x < width {
+                    let color = lowIndex < palette.count ? palette[lowIndex] : (r: UInt8(0), g: UInt8(0), b: UInt8(0), a: UInt8(255))
+                    let offset = (targetY * width + x) * 4
+                    pixelData[offset] = color.r
+                    pixelData[offset + 1] = color.g
+                    pixelData[offset + 2] = color.b
+                    pixelData[offset + 3] = color.a
+                    x += 1
+                }
+            }
+
+            // Skip remaining padding
+            let padding = rowSize - bytesRead
+            if padding > 0 {
+                try reader.skip(padding)
+            }
+        }
+
+        // Read AND mask (1-bit transparency)
+        let andRowSize = ((width + 31) / 32) * 4
+
+        for y in 0..<height {
+            let targetY = height - 1 - y
+
+            for byteIndex in 0..<andRowSize {
+                let maskByte: UInt8
+                if reader.remaining > 0 {
+                    maskByte = try reader.readUInt8()
+                } else {
+                    break
+                }
+
+                for bit in 0..<8 {
+                    let x = byteIndex * 8 + bit
+                    if x >= width { break }
+
+                    let isTransparent = (maskByte >> (7 - bit)) & 1 == 1
+                    if isTransparent {
+                        let offset = (targetY * width + x) * 4
+                        pixelData[offset + 3] = 0
+                    }
+                }
+            }
+        }
+
+        return try createCGImage(from: pixelData, width: width, height: height)
+    }
+
+    /// Decode 1-bit monochrome BMP with AND mask
+    private static func decode1BitBMP(reader: inout BinaryReader, width: Int, height: Int, paletteSize: Int) throws -> CGImage {
+        // Read color palette (2 colors, BGRA format)
+        let actualPaletteSize = paletteSize > 0 ? min(paletteSize, 2) : 2
+        var palette: [(r: UInt8, g: UInt8, b: UInt8, a: UInt8)] = []
+        for _ in 0..<actualPaletteSize {
+            let b = try reader.readUInt8()
+            let g = try reader.readUInt8()
+            let r = try reader.readUInt8()
+            let _ = try reader.readUInt8() // reserved
+            palette.append((r: r, g: g, b: b, a: 255))
+        }
+
+        let rowSize = ((width + 31) / 32) * 4  // Padded to 4 bytes
+
+        var pixelData = Data(count: width * height * 4)
+
+        // Read indexed color data (bottom-to-top)
+        for y in 0..<height {
+            let targetY = height - 1 - y
+
+            for byteIndex in 0..<rowSize {
+                let byte = try reader.readUInt8()
+
+                for bit in 0..<8 {
+                    let x = byteIndex * 8 + bit
+                    if x >= width { break }
+
+                    let index = Int((byte >> (7 - bit)) & 1)
+                    let color = index < palette.count ? palette[index] : (r: UInt8(0), g: UInt8(0), b: UInt8(0), a: UInt8(255))
+
+                    let offset = (targetY * width + x) * 4
+                    pixelData[offset] = color.r
+                    pixelData[offset + 1] = color.g
+                    pixelData[offset + 2] = color.b
+                    pixelData[offset + 3] = color.a
+                }
+            }
+        }
+
+        // Read AND mask (1-bit transparency)
+        for y in 0..<height {
+            let targetY = height - 1 - y
+
+            for byteIndex in 0..<rowSize {
+                let maskByte: UInt8
+                if reader.remaining > 0 {
+                    maskByte = try reader.readUInt8()
+                } else {
+                    break
+                }
+
+                for bit in 0..<8 {
+                    let x = byteIndex * 8 + bit
+                    if x >= width { break }
+
+                    let isTransparent = (maskByte >> (7 - bit)) & 1 == 1
+                    if isTransparent {
+                        let offset = (targetY * width + x) * 4
+                        pixelData[offset + 3] = 0
+                    }
+                }
             }
         }
 
