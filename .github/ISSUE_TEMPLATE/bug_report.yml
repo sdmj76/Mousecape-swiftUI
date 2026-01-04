@@ -20,7 +20,7 @@ body:
     id: steps
     attributes:
       label: Steps to Reproduce / 复现步骤
-      description: How can we reproduce this bug? / 如何复现这个问题？
+      description: How can we reproduce this bug? (If the issue is with the cursor import, please provide your cursor file.) / 如何复现这个问题？（如果是 光标 导入问题，麻烦提供你的 光标 文件）
       placeholder: |
         1. Open Mousecape
         2. Click on...
