@@ -116,9 +116,9 @@ BOOL applyCapeForIdentifier(NSDictionary *cursor, NSString *identifier, BOOL res
         CFTypeID type = CFGetTypeID((__bridge CFTypeRef)object);
         NSBitmapImageRep *rep;
         if (type == CGImageGetTypeID()) {
-            rep = [[[NSBitmapImageRep alloc] initWithCGImage:(__bridge CGImageRef)object] autorelease];
+            rep = [[NSBitmapImageRep alloc] initWithCGImage:(__bridge CGImageRef)object];
         } else {
-            rep = [[[NSBitmapImageRep alloc] initWithData:object] autorelease];
+            rep = [[NSBitmapImageRep alloc] initWithData:object];
         }
         rep = rep.retaggedSRGBSpace;
 
@@ -128,11 +128,11 @@ BOOL applyCapeForIdentifier(NSDictionary *cursor, NSString *identifier, BOOL res
                 images[images.count] = object;
                 continue;
             }
-            
+
             images[images.count] = (__bridge id)[rep CGImage];
-            
+
         } else {
-            NSBitmapImageRep *newRep = [[[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
+            NSBitmapImageRep *newRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
                                                                                pixelsWide:rep.pixelsWide
                                                                                pixelsHigh:rep.pixelsHigh
                                                                             bitsPerSample:8
@@ -141,7 +141,7 @@ BOOL applyCapeForIdentifier(NSDictionary *cursor, NSString *identifier, BOOL res
                                                                                  isPlanar:NO
                                                                            colorSpaceName:NSCalibratedRGBColorSpace
                                                                               bytesPerRow:4 * rep.pixelsWide
-                                                                             bitsPerPixel:32] autorelease];
+                                                                             bitsPerPixel:32];
             NSGraphicsContext *ctx = [NSGraphicsContext graphicsContextWithBitmapImageRep:newRep];
             [NSGraphicsContext saveGraphicsState];
             [NSGraphicsContext setCurrentContext:ctx];

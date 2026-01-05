@@ -33,7 +33,7 @@
 		FA1DC01919527A73009E879C /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA359844189DBA3800288163 /* SystemConfiguration.framework */; };
 		FA1DC01A19527A79009E879C /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA254779189D85890038E1D9 /* ApplicationServices.framework */; };
 		FA35983F189DA3BC00288163 /* MCPrefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FA35983E189DA3BC00288163 /* MCPrefs.m */; };
-		FA359840189DA3C100288163 /* MCPrefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FA35983E189DA3BC00288163 /* MCPrefs.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		FA359840189DA3C100288163 /* MCPrefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FA35983E189DA3BC00288163 /* MCPrefs.m */; };
 		FA359849189DC40100288163 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA359848189DC40100288163 /* Security.framework */; };
 		FA35984D189DC55A00288163 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA35984C189DC55A00288163 /* ServiceManagement.framework */; };
 		FA359852189E035900288163 /* listen.m in Sources */ = {isa = PBXBuildFile; fileRef = FA359851189E035900288163 /* listen.m */; };
@@ -45,12 +45,12 @@
 		FA8FF774189D67B100750E51 /* create.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF773189D67B100750E51 /* create.m */; };
 		FA9A48AB2353C6EF009CF05E /* NSBitmapImageRep+ColorSpace.m in Sources */ = {isa = PBXBuildFile; fileRef = FABA44D321D9D7D0009B10D9 /* NSBitmapImageRep+ColorSpace.m */; };
 		FAAEF8F7189EB34700145DF8 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAAEF8F6189EB34700145DF8 /* QuartzCore.framework */; };
-		FAAEF94E189EFC9300145DF8 /* create.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF773189D67B100750E51 /* create.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		FAAEF94F189EFC9600145DF8 /* backup.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF76D189D66CB00750E51 /* backup.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		FAAEF950189EFC9800145DF8 /* apply.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF770189D66D800750E51 /* apply.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		FAAEF951189F0CC300145DF8 /* restore.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF76A189D664400750E51 /* restore.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		FAAEF94E189EFC9300145DF8 /* create.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF773189D67B100750E51 /* create.m */; };
+		FAAEF94F189EFC9600145DF8 /* backup.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF76D189D66CB00750E51 /* backup.m */; };
+		FAAEF950189EFC9800145DF8 /* apply.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF770189D66D800750E51 /* apply.m */; };
+		FAAEF951189F0CC300145DF8 /* restore.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF76A189D664400750E51 /* restore.m */; };
 		FAAEF957189F4ED300145DF8 /* scale.m in Sources */ = {isa = PBXBuildFile; fileRef = FAAEF956189F4ED300145DF8 /* scale.m */; };
-		FAAEF958189F4F8200145DF8 /* scale.m in Sources */ = {isa = PBXBuildFile; fileRef = FAAEF956189F4ED300145DF8 /* scale.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		FAAEF958189F4F8200145DF8 /* scale.m in Sources */ = {isa = PBXBuildFile; fileRef = FAAEF956189F4ED300145DF8 /* scale.m */; };
 		FABA44D421D9D7D0009B10D9 /* NSBitmapImageRep+ColorSpace.m in Sources */ = {isa = PBXBuildFile; fileRef = FABA44D321D9D7D0009B10D9 /* NSBitmapImageRep+ColorSpace.m */; };
 		FABA44D521D9D947009B10D9 /* NSBitmapImageRep+ColorSpace.m in Sources */ = {isa = PBXBuildFile; fileRef = FABA44D321D9D7D0009B10D9 /* NSBitmapImageRep+ColorSpace.m */; };
 		FAC69F65189D603C00BC829D /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAC69F64189D603C00BC829D /* Cocoa.framework */; };
@@ -60,7 +60,7 @@
 		FAC69FD5189D609B00BC829D /* GBOptionsHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = FAC69FD1189D609B00BC829D /* GBOptionsHelper.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		FAC69FD6189D609B00BC829D /* GBSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = FAC69FD3189D609B00BC829D /* GBSettings.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		FAC69FDA189D632B00BC829D /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAC69F64189D603C00BC829D /* Cocoa.framework */; };
-		FAC69FDC189D636700BC829D /* MCDefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FAC69FDB189D636700BC829D /* MCDefs.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		FAC69FDC189D636700BC829D /* MCDefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FAC69FDB189D636700BC829D /* MCDefs.m */; };
 		FAC69FDD189D636700BC829D /* MCDefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FAC69FDB189D636700BC829D /* MCDefs.m */; };
 		FAE5D56C1952700B007620DE /* MCDefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FAC69FDB189D636700BC829D /* MCDefs.m */; };
 		FAE5D56D1952700B007620DE /* MCPrefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FA35983E189DA3BC00288163 /* MCPrefs.m */; };
@@ -1207,7 +1207,7 @@
 		FAC69FB7189D608A00BC829D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
@@ -1236,7 +1236,7 @@
 		FAC69FB8189D608A00BC829D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";

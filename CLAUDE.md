@@ -88,12 +88,11 @@ MousecapeApp（入口）
 
 ## 内存管理
 
-**混合 MRR/ARC 代码库：**
+**全 ARC 代码库：**
 - Swift 文件：ARC（自动）
-- mousecloak/ 中的 Objective-C 文件：MRR（手动）- 使用 `-fno-objc-arc` 编译
-  - 受影响的文件：MCDefs.m、MCPrefs.m、apply.m、backup.m、create.m、restore.m、scale.m、listen.m
+- Objective-C 文件：ARC（自动）
 
-修改代码前请检查 `project.pbxproj` 中的 `-fno-objc-arc` 标志。
+所有 mousecloak/ 目录下的 Objective-C 文件已于 2026-01 迁移至 ARC，不再使用手动内存管理（MRR）。
 
 ## Cape 文件格式
 
