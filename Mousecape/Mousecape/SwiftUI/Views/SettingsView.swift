@@ -139,12 +139,17 @@ struct GeneralSettingsView: View {
 // MARK: - Appearance Settings
 
 struct AppearanceSettingsView: View {
-    @AppStorage("appearanceMode") private var appearanceMode = 0
+    /// appearanceMode: 1 = Light, 2 = Dark (默认 1 = Light)
+    @AppStorage("appearanceMode") private var appearanceMode = 1
     @AppStorage("showPreviewAnimations") private var showPreviewAnimations = true
     @AppStorage("showAuthorInfo") private var showAuthorInfo = true
     @AppStorage("previewGridColumns") private var previewGridColumns = 0
     @AppStorage("transparentWindow") private var transparentWindow = false
     @Environment(LocalizationManager.self) private var localization
+
+    private var isDarkMode: Bool {
+        appearanceMode == 2
+    }
 
     var body: some View {
         @Bindable var localization = localization
@@ -152,7 +157,6 @@ struct AppearanceSettingsView: View {
         Form {
             Section(localization.localized("Theme")) {
                 Picker(localization.localized("Appearance"), selection: $appearanceMode) {
-                    Text(localization.localized("System")).tag(0)
                     Text(localization.localized("Light")).tag(1)
                     Text(localization.localized("Dark")).tag(2)
                 }
@@ -200,7 +204,13 @@ struct AppearanceSettingsView: View {
         guard let window = NSApp.windows.first else { return }
         if transparent {
             window.isOpaque = false
-            window.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.9)
+            if isDarkMode {
+                // 深色模式：使用深灰色背景，避免与桌面混合时泛白
+                window.backgroundColor = NSColor(calibratedWhite: 0.15, alpha: 0.95)
+            } else {
+                // 浅色模式：使用系统窗口背景色
+                window.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.9)
+            }
         } else {
             window.isOpaque = true
             window.backgroundColor = NSColor.windowBackgroundColor
