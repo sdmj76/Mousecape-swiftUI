@@ -44,7 +44,7 @@ The Release build produces a Universal Binary that runs natively on both Intel a
 
 ## Example Cursors
 
-This repository includes an example Kiriko.cape file, available for [download here](Example/local.ArakiCC.Kiriko.cape).
+This repository includes an example Kiriko.cape file, available for [download here](Example/Kiriko.cape).
 
 This is a cursor set created by [ArakiCC](https://space.bilibili.com/14913641), featuring 15 pointer styles. Licensed for public use by [sdmj76](https://space.bilibili.com/224661756).
 
@@ -210,7 +210,7 @@ Release 构建会生成 Universal Binary，可在 Intel 和 Apple Silicon Mac �
 
 ## 示例光标
 
-本仓库包含的示例 Kiriko.cape 文件，可在[此处下载](Example/local.ArakiCC.Kiriko.cape)。
+本仓库包含的示例 Kiriko.cape 文件，可在[此处下载](Example/Kiriko.cape)。
 
 这是 [ArakiCC](https://space.bilibili.com/14913641) 自制的光标，一共15个指针样式。已由 [sdmj76](https://space.bilibili.com/224661756) 购买授权供大家使用。
 
