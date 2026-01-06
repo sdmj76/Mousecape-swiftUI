@@ -154,14 +154,20 @@
 - (void)willSaveNotification:(NSNotification *)note {
     MCCursorLibrary *cape = note.object;
     NSURL *oldURL = cape.fileURL;
-    [cape setFileURL:[self URLForCape:cape]];
-    NSError *error = nil;
-    [[NSFileManager defaultManager] removeItemAtURL:oldURL error:&error];
+    NSURL *newURL = [self URLForCape:cape];
+    [cape setFileURL:newURL];
 
-    if (error) {
-        NSLog(@"error removing cape after rename: %@", error);
+    // Only remove old file if URLs are different and old file exists
+    if (oldURL && ![oldURL isEqual:newURL]) {
+        NSFileManager *fm = [NSFileManager defaultManager];
+        if ([fm fileExistsAtPath:oldURL.path]) {
+            NSError *error = nil;
+            [fm removeItemAtURL:oldURL error:&error];
+            if (error) {
+                NSLog(@"error removing cape after rename: %@", error);
+            }
+        }
     }
-
 }
 
 - (BOOL)dumpCursorsWithProgressBlock:(BOOL (^)(NSUInteger current, NSUInteger total))block {

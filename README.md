@@ -11,7 +11,7 @@ A free macOS cursor manager that allows you to easily replace Mac system pointer
 
 Built with SwiftUI, fully adapted to Liquid Glass design language, with complete support for macOS Tahoe.
 
-**System Requirements: macOS Tahoe (26) or later**
+**System Requirements: macOS Sequoia (15) or later**
 
 ![Home](Screenshot/Home_en.png)
 ![Edit](Screenshot/Edit_en.png)
@@ -22,9 +22,6 @@ Built with SwiftUI, fully adapted to Liquid Glass design language, with complete
 
 - Customize Mac system cursors, supporting both static and animated cursors
 - One-click import of Windows cursor formats (.cur / .ani)
-
-> Requires downloading the **premium** version, provided for free. The difference from the standard version is the built-in Python library for cursor conversion.
-
 - Uses private, non-intrusive CoreGraphics API, safe and reliable
 - Runs silently in the background without interfering with the system
 
@@ -34,10 +31,7 @@ Download the latest version from the [Releases](https://github.com/sdmj76/Mousec
 
 ### Build from Source
 
-To build from source, open `Mousecape/Mousecape.xcodeproj` in Xcode:
-
-- **Standard version**: Select Scheme `Mousecape`
-- **Premium version**: Select Scheme `Mousecape-Dev` (includes Python library for Windows cursor conversion)
+To build from source, open `Mousecape/Mousecape.xcodeproj` in Xcode and select Scheme `Mousecape`.
 
 ### Supported Architectures
 
@@ -67,24 +61,15 @@ It runs silently in the background without interfering with normal system usage.
 1. Download and open the Mousecape app
 2. Click **Settings → Mousecape Helper Tool** to install the daemon
 
-### Create New Cursor
-
-1. Click the "+" button to add a new cursor set, or import Windows format cursors
-2. Click the "+" button to add a pointer to customize
-3. Drag and drop image or cursor files into the edit window
-4. Adjust hotspot position and other parameters
-5. Save and apply
-
 ### Import Windows Format Cursors
 
-Mousecape supports batch importing Windows cursor themes. After extracting the downloaded Windows cursor package, select the folder containing the cursor files to import.
+Mousecape supports batch importing Windows cursor themes:
 
-Standard Windows cursor folders typically contain the following files:
+1. Extract the downloaded Windows cursor package
+2. Click the "+" button and select "Import Windows Cursors"
+3. Select the folder containing the cursor files to import
 
-```
-Normal, Text, Link, Busy, Working, Precision, Unavailable,
-Vertical, Horizontal, Diagonal1, Diagonal2, Move, Help
-```
+If the folder contains an `install.inf` file, Mousecape will automatically parse it to map cursor files to the correct cursor types. Otherwise, it will use filename-based matching.
 
 ### Import/Export **.cape** Format Cursors
 
@@ -92,6 +77,14 @@ Vertical, Horizontal, Diagonal1, Diagonal2, Move, Help
 - Click the "Export" button, then choose where to save the **.cape** cursor file
 
 > **.cape** is Mousecape's proprietary cursor format, containing a complete set of cursors in one file
+
+### Create New Cursor
+
+1. Click the "+" button to add a new cursor set
+2. Click the "+" button to add a pointer to customize
+3. Drag and drop image or cursor files into the edit window
+4. Adjust hotspot position and other parameters
+5. Save and apply
 
 ### Create Custom Cursors
 
@@ -111,28 +104,6 @@ Vertical, Horizontal, Diagonal1, Diagonal2, Move, Help
 
 - **Standard image formats**: PNG, JPEG, TIFF, GIF
 - **Windows cursor formats**: .cur (static), .ani (animated)
-
-### Custom Windows Cursor Mapping
-
-If your Windows cursor filenames differ from macOS cursor names, refer to the mapping table below to add them manually:
-
-| macOS Cursor Name | Windows Filename |
-|:------------------|:-----------------|
-| Arrow             | Normal           |
-| IBeam             | Text             |
-| Pointing          | Link             |
-| Busy              | Busy             |
-| Wait              | Working          |
-| Crosshair         | Precision        |
-| Forbidden         | Unavailable      |
-| Resize N-S        | Vertical         |
-| Resize W-E        | Horizontal       |
-| Window N-S        | Vertical         |
-| Window W-E        | Horizontal       |
-| Window NW-SE      | Diagonal1        |
-| Window NE-SW      | Diagonal2        |
-| Move              | Move             |
-| Help              | Help             |
 
 ## Troubleshooting
 
@@ -206,7 +177,7 @@ This is just a tool, and I've polished its UI. But what matters most is your cur
 
 使用 SwiftUI 构建，全面适配液态玻璃设计语言，完整支持 macOS Tahoe。
 
-**系统要求：macOS Tahoe (26) 或更高版本**
+**系统要求：macOS Sequoia (15) 或更高版本**
 
 ![主页](Screenshot/Home_zh.png)
 ![编辑](Screenshot/Edit_zh.png)
@@ -217,9 +188,6 @@ This is just a tool, and I've polished its UI. But what matters most is your cur
 
 - 自定义 Mac 系统光标，支持静态和动画光标
 - 一键导入 Windows 格式指针（.cur / .ani）
-
-> 需要下载 **premium** 版本，免费提供。与标准版区别是内置python库，用于转换光标
-
 - 使用私有、非侵入式的 CoreGraphics API，安全可靠
 - 后台静默运行，不干扰系统
 
@@ -229,10 +197,7 @@ This is just a tool, and I've polished its UI. But what matters most is your cur
 
 ### 自行构建
 
-如需自行构建，请在 Xcode 中打开 `Mousecape/Mousecape.xcodeproj`：
-
-- **普通版**：选择 Scheme `Mousecape`
-- **Premium 版**：选择 Scheme `Mousecape-Dev`（内置 Python 库，支持 Windows 光标转换）
+如需自行构建，请在 Xcode 中打开 `Mousecape/Mousecape.xcodeproj`，选择 Scheme `Mousecape` 构建。
 
 ### 支持的架构
 
@@ -262,24 +227,15 @@ Mousecape 通过调用 Apple 用于初始化系统光标的私有 API 来工作�
 1. 下载并打开 Mousecape 应用
 2. 点击 **设置 → Mousecape辅助程序** 安装守护进程
 
-### 新建光标
-
-1. 点击 "+" 按钮添加新光标套装，或导入Windows格式光标
-2. 点击 "+" 按钮添加要自定义的指针
-3. 将图片或光标文件拖放到编辑窗口中
-4. 调整热点位置和其他参数
-5. 保存并应用
-
 ### 导入 Windows 格式光标
 
-Mousecape 支持批量导入 Windows 光标主题。下载的 Windows 光标包解压后，选择包含光标文件的文件夹导入即可
+Mousecape 支持批量导入 Windows 光标主题：
 
-标准的 Windows 光标文件夹通常包含以下文件：
+1. 下载的 Windows 光标包解压
+2. 点击 "+" 按钮，选择"导入 Windows 光标"
+3. 选择包含光标文件的文件夹导入即可
 
-```
-Normal、Text、Link、Busy、Working、Precision、Unavailable、
-Vertical、Horizontal、Diagonal1、Diagonal2、Move、Help
-```
+如果文件夹中包含 `install.inf` 文件，Mousecape 会自动解析该文件以正确映射光标类型。否则，将使用基于文件名的匹配。
 
 ### 导入/导出 **.cape** 格式光标
 
@@ -287,6 +243,14 @@ Vertical、Horizontal、Diagonal1、Diagonal2、Move、Help
 - 点击 "导出" 按键，在弹出的finder窗口，选择要保存 **.cape** 光标的位置
 
 > **.cape** 为 Mousecape 专用光标格式，文件内包含了一整套光标的内容
+
+### 新建光标
+
+1. 点击 "+" 按钮添加新光标套装
+2. 点击 "+" 按钮添加要自定义的指针
+3. 将图片或光标文件拖放到编辑窗口中
+4. 调整热点位置和其他参数
+5. 保存并应用
 
 ### 创建自定义光标
 
@@ -306,28 +270,6 @@ Vertical、Horizontal、Diagonal1、Diagonal2、Move、Help
 
 - **常规图片格式**：PNG、JPEG、TIFF、GIF
 - **Windows 光标格式**：.cur（静态）、.ani（动画）
-
-### 自定义 Windows 光标映射
-
-如果你的 Windows 光标文件名通常与 macOS 光标名称不同，可参考以下对照表手动添加：
-
-| macOS 光标名称 | Windows 文件名 |
-|:-------------|:---------------|
-| Arrow        | Normal         |
-| IBeam        | Text           |
-| Pointing     | Link           |
-| Busy         | Busy           |
-| Wait         | Working        |
-| Crosshair    | Precision      |
-| Forbidden    | Unavailable    |
-| Resize N-S   | Vertical       |
-| Resize W-E   | Horizontal     |
-| Window N-S   | Vertical       |
-| Window W-E   | Horizontal     |
-| Window NW-SE | Diagonal1      |
-| Window NE-SW | Diagonal2      |
-| Move         | Move           |
-| Help         | Help           |
 
 ## 故障排除
 
@@ -389,23 +331,3 @@ launchctl list | grep mouse
 ## 作者的话
 
 这只是一个工具，我美化了它的UI。但最重要的还是你的光标内容 :)
-
----
-
-## LICENSE
-
-I worked very hard researching the private methods used in Mousecape and creating this app. Please respect me and my work by not using any of the information provided here for commercial purposes.
-
-Copyright (c) 2013-2025, Alex Zielenski
-All rights reserved.
-
-SwiftUI Interface Modifications Copyright (c) 2025, sdmj76
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-* Any redistribution, use, or modification is done solely for personal benefit and not for any commercial purpose or for monetary gain
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.

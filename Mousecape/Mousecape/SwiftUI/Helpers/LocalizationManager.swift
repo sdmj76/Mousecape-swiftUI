@@ -80,6 +80,8 @@ private let localizationStrings: [AppLanguage: [String: String]] = [
         "Preview Grid Columns": "Preview Grid Columns",
         "Auto (based on window size)": "Auto (based on window size)",
         "columns": "columns",
+        "Transparent Window": "Transparent Window",
+        "Enable semi-transparent window background": "Enable semi-transparent window background",
 
         // Shortcuts Settings
         "Global Shortcuts": "Global Shortcuts",
@@ -245,6 +247,8 @@ private let localizationStrings: [AppLanguage: [String: String]] = [
         "Preview Grid Columns": "预览网格列数",
         "Auto (based on window size)": "自动（根据窗口大小）",
         "columns": "列",
+        "Transparent Window": "透明窗口",
+        "Enable semi-transparent window background": "启用半透明窗口背景",
 
         // Shortcuts Settings
         "Global Shortcuts": "全局快捷键",

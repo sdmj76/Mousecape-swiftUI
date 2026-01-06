@@ -1,0 +1,79 @@
+name: Build Mousecape
+
+on:
+  # 推送触发
+  push:
+    branches: [master, develop, feature]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+
+  # PR 触发
+  pull_request:
+    branches: [master, develop, feature]
+
+  # 手动触发
+  workflow_dispatch:
+    inputs:
+      configuration:
+        description: 'Build configuration'
+        default: 'Release'
+        type: choice
+        options:
+          - Debug
+          - Release
+
+# 并发控制
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 26
+        run: |
+          # 列出可用的 Xcode 版本
+          ls /Applications/ | grep Xcode
+          # 选择 Xcode 26
+          sudo xcode-select -s /Applications/Xcode_26.1.app
+          xcodebuild -version
+
+      - name: Build Mousecape
+        run: |
+          xcodebuild -project Mousecape/Mousecape.xcodeproj \
+            -scheme Mousecape \
+            -configuration ${{ github.event.inputs.configuration || 'Release' }} \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=YES \
+            build
+
+      - name: Prepare artifact
+        run: |
+          # 查找构建产物
+          BUILD_DIR=$(find ~/Library/Developer/Xcode/DerivedData -name "Mousecape.app" -type d | head -1)
+          if [ -n "$BUILD_DIR" ]; then
+            echo "Found app at: $BUILD_DIR"
+            # 使用 ditto 创建 zip 保持 .app 结构
+            mkdir -p /tmp/artifact
+            ditto -c -k --keepParent "$BUILD_DIR" /tmp/artifact/Mousecape.app.zip
+            echo "Created zip: /tmp/artifact/Mousecape.app.zip"
+            ls -lh /tmp/artifact/
+          else
+            echo "Error: Mousecape.app not found"
+            find ~/Library/Developer/Xcode/DerivedData -name "*.app" -type d
+            exit 1
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mousecape-${{ github.sha }}
+          path: /tmp/artifact/Mousecape.app.zip
+          retention-days: 7

@@ -50,7 +50,7 @@ NSString *UUID() {
     CFUUIDRef theUUID = CFUUIDCreate(NULL);
     CFStringRef string = CFUUIDCreateString(NULL, theUUID);
     CFRelease(theUUID);
-    return [(NSString *)string autorelease];
+    return (__bridge_transfer NSString *)string;
 }
 
 NSString *MMGet(NSString *prompt) {
@@ -89,15 +89,15 @@ NSData *pngDataForImage(id image) {
     }
     
     // CGImage
-    CGImageRef obj = (CGImageRef)image;
+    CGImageRef obj = (__bridge CGImageRef)image;
     CFMutableDataRef mutableData = CFDataCreateMutable(kCFAllocatorDefault, 0);
     CGImageDestinationRef dest = CGImageDestinationCreateWithData(mutableData, kUTTypePNG, 1, NULL);
     CGImageDestinationAddImage(dest, obj, NULL);
     CGImageDestinationFinalize(dest);
     
     CFRelease(dest);
-    
-    return [(NSData *)mutableData autorelease];
+
+    return (__bridge_transfer NSData *)mutableData;
 }
 
 NSDictionary *capeWithIdentifier(NSString *identifier) {
@@ -130,11 +130,11 @@ NSDictionary *capeWithIdentifier(NSString *identifier) {
     return dict;
 }
 
-extern NSDictionary *cursorMap() {
+extern NSDictionary *cursorMap(void) {
     static NSDictionary *cursorNameMap = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        cursorNameMap = [[NSDictionary dictionaryWithObjectsAndKeys:
+        cursorNameMap = [NSDictionary dictionaryWithObjectsAndKeys:
                           @"Resize N-S", @"com.apple.cursor.23",
                           @"Camera 2", @"com.apple.cursor.9",
                           @"IBeam H.", @"com.apple.cursor.26",
@@ -184,7 +184,7 @@ extern NSDictionary *cursorMap() {
                           @"Help", @"com.apple.cursor.40",
                           @"Forbidden", @"com.apple.cursor.3",
                           @"Cell XOR", @"com.apple.cursor.20",
-                          @"Zoom Out", @"com.apple.cursor.43", nil] retain];
+                          @"Zoom Out", @"com.apple.cursor.43", nil];
     });
     
     return cursorNameMap;
@@ -226,8 +226,7 @@ NSArray<NSString *> *MCArrowSynonyms(void) {
                 [set addObject:name];
             }
         }
-        result = [[set array] retain];
-        [set release];
+        result = [set array];
     });
     return result;
 }
@@ -255,8 +254,7 @@ NSArray<NSString *> *MCIBeamSynonyms(void) {
                 [set addObject:name];
             }
         }
-        result = [[set array] retain];
-        [set release];
+        result = [set array];
     });
     return result;
 }
@@ -280,7 +278,7 @@ BOOL MCCursorIsPointer(NSString *identifier) {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         NSDictionary *c = cursorMap();
-        pointers = [@[ [c allKeysForObject:@"Alias"][0], [c allKeysForObject:@"Arrow"][0], [c allKeysForObject:@"Busy"][0], [c allKeysForObject:@"Closed"][0], [c allKeysForObject:@"Copy Drag"][0], [c allKeysForObject:@"Counting Down"][0], [c allKeysForObject:@"Counting Up"][0], [c allKeysForObject:@"Counting Up/Down"][0], [c allKeysForObject:@"Ctx Menu"][0], [c allKeysForObject:@"Forbidden"][0], [c allKeysForObject:@"Link"][0], [c allKeysForObject:@"Move"][0], [c allKeysForObject:@"Open"][0], [c allKeysForObject:@"Pointing"][0], [c allKeysForObject:@"Poof"][0], [c allKeysForObject:@"Wait"][0], [c allKeysForObject:@"Zoom In"][0], [c allKeysForObject:@"Zoom Out"] ] retain];
+        pointers = @[ [c allKeysForObject:@"Alias"][0], [c allKeysForObject:@"Arrow"][0], [c allKeysForObject:@"Busy"][0], [c allKeysForObject:@"Closed"][0], [c allKeysForObject:@"Copy Drag"][0], [c allKeysForObject:@"Counting Down"][0], [c allKeysForObject:@"Counting Up"][0], [c allKeysForObject:@"Counting Up/Down"][0], [c allKeysForObject:@"Ctx Menu"][0], [c allKeysForObject:@"Forbidden"][0], [c allKeysForObject:@"Link"][0], [c allKeysForObject:@"Move"][0], [c allKeysForObject:@"Open"][0], [c allKeysForObject:@"Pointing"][0], [c allKeysForObject:@"Poof"][0], [c allKeysForObject:@"Wait"][0], [c allKeysForObject:@"Zoom In"][0], [c allKeysForObject:@"Zoom Out"] ];
     });
 
     return [pointers containsObject:identifier];

@@ -25,7 +25,7 @@ int main(int argc, char * argv[]) {
     @autoreleasepool {
         GBSettings *settings = [GBSettings settingsWithName:@"mousecape" parent:nil];
         
-        GBOptionsHelper *options = [[[GBOptionsHelper alloc] init] autorelease];
+        GBOptionsHelper *options = [[GBOptionsHelper alloc] init];
         [options registerSeparator:@(BOLD "APPLYING CAPES" RESET)];
         [options registerOption:'a' long:@"apply" description:@"Apply a cape" flags:GBValueRequired];
         [options registerOption:'r' long:@"reset" description:@"Reset to the default OSX cursors" flags:GBValueNone];
@@ -70,7 +70,7 @@ int main(int argc, char * argv[]) {
         options.printHelpHeader = ^{ return @(BOLD WHITE "%APPNAME v%APPVERSION" RESET); };
         options.printHelpFooter = ^{ return @(BOLD WHITE "Copyright © 2013-2025 Sdmj76" RESET); };
         
-        GBCommandLineParser *parser = [[[GBCommandLineParser alloc] init] autorelease];
+        GBCommandLineParser *parser = [[GBCommandLineParser alloc] init];
         [options registerOptionsToCommandLineParser:parser];
         [parser parseOptionsWithArguments:argv count:argc block:^(GBParseFlags flags, NSString *option, id value, BOOL *stop) {
             switch (flags) {

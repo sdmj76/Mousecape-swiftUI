@@ -2,22 +2,22 @@
 
 本文件为 Claude Code (claude.ai/code) 在此代码库中工作时提供指导。
 
+@README.md - 项目介绍、功能说明、使用指南
+@RELEASE_NOTES.md - 版本更新日志
+
 ## 项目概述
 
 Mousecape 是一款免费的 macOS 光标管理器，使用私有 CoreGraphics API 来自定义系统光标。它由三个构建目标组成，协同工作以应用和持久化自定义光标主题（"cape"）。
 
-**系统要求：** macOS Tahoe (26.0) 或更高版本
+**系统要求：** macOS Sequoia (15.0) 或更高版本
 
 ## 构建命令
 
 在 Xcode 中打开 `Mousecape/Mousecape.xcodeproj`：
 
 ```bash
-# 构建所有目标（标准版）
+# 构建应用
 xcodebuild -project Mousecape/Mousecape.xcodeproj -scheme Mousecape build
-
-# 构建高级版（包含用于 Windows 光标转换的 Python）
-xcodebuild -project Mousecape/Mousecape.xcodeproj -scheme Mousecape-Dev build
 
 # 构建特定目标
 xcodebuild -project Mousecape/Mousecape.xcodeproj -target mousecloak build
@@ -29,11 +29,11 @@ xcodebuild -project Mousecape/Mousecape.xcodeproj -target mousecloak build
 
 1. **Mousecape**（GUI 应用）- 使用 SwiftUI 界面的主 macOS 应用程序
    - 入口：`Mousecape/SwiftUI/MousecapeApp.swift`
-   - 使用 macOS Tahoe 的液态玻璃设计语言
+   - 自适应设计：macOS 26+ 使用液态玻璃（Liquid Glass），macOS 15 使用 Material 背景
 
 2. **mousecloak**（CLI 工具）- 用于应用 cape 的命令行工具
    - 入口：`Mousecape/mousecloak/main.m`
-   - 命令：`--apply`、`--reset`、`--create`、`--dump`、`--scale`、`--convert`、`--export`
+   - 命令：`--apply`、`--reset`、`--create`、`--dump`、`--scale`、`--convert`、`--export`、`--listen`
    - 使用 GBCli 进行参数解析
 
 3. **com.sdmj76.mousecloakhelper**（LaunchAgent）- 后台守护进程
@@ -79,24 +79,40 @@ CGSCopyRegisteredCursorImages() // 读取当前光标数据
 单窗口设计，基于叠层的导航：
 
 ```
-MousecapeApp（入口）
-└── ContentView
-    ├── MainView（页面切换 + 工具栏）
-    │   ├── HomeView（cape 列表 + 预览）
-    │   └── SettingsView
-    └── EditOverlayView（编辑时的叠层）
+SwiftUI/
+├── MousecapeApp.swift（入口）
+├── Models/
+│   ├── AppState.swift（@Observable 状态管理）
+│   ├── AppEnums.swift
+│   ├── Cursor.swift（MCCursor 包装器）
+│   └── CursorLibrary.swift（MCCursorLibrary 包装器）
+├── Views/
+│   ├── MainView.swift（页面切换 + 工具栏）
+│   ├── HomeView.swift（cape 列表 + 预览）
+│   ├── SettingsView.swift
+│   ├── EditOverlayView.swift（编辑时的叠层）
+│   ├── CapePreviewPanel.swift
+│   └── MousecapeCommands.swift（菜单命令）
+├── Utilities/
+│   ├── LocalizationManager.swift（多语言支持）
+│   ├── WindowsCursorParser.swift
+│   ├── WindowsCursorConverter.swift
+│   ├── WindowsCursorMapping.swift
+│   └── WindowsINFParser.swift
+└── Helpers/
+    ├── AnimatingCursorView.swift
+    └── GlassEffectContainer.swift
 ```
 
-状态管理通过 `@Observable AppState` 单例实现，带有手动撤销/重做栈。
+状态管理通过 `@Observable @MainActor AppState` 单例实现，带有手动撤销/重做栈。
 
 ## 内存管理
 
-**混合 MRR/ARC 代码库：**
+**全 ARC 代码库：**
 - Swift 文件：ARC（自动）
-- mousecloak/ 中的 Objective-C 文件：MRR（手动）- 使用 `-fno-objc-arc` 编译
-  - 受影响的文件：MCDefs.m、MCPrefs.m、apply.m、backup.m、create.m、restore.m、scale.m、listen.m
+- Objective-C 文件：ARC（自动）
 
-修改代码前请检查 `project.pbxproj` 中的 `-fno-objc-arc` 标志。
+所有 mousecloak/ 目录下的 Objective-C 文件已于 2026-01 迁移至 ARC，不再使用手动内存管理（MRR）。
 
 ## Cape 文件格式
 
@@ -107,12 +123,13 @@ Cape 是二进制 plist 文件（`.cape` 扩展名），包含：
 
 **Cape 库位置：** `~/Library/Application Support/Mousecape/capes/`
 
-## Windows 光标转换（仅限高级版）
+## Windows 光标转换
 
-在 `Mousecape-Dev` 方案中可用，包含打包的 Python：
-- `WindowsCursorConverter.swift` - 调用 Python 脚本进行 .cur/.ani 转换
+使用原生 Swift 实现，无需外部依赖：
+- `WindowsCursorParser.swift` - 原生 Swift 解析器，支持 .cur/.ani 格式
+- `WindowsCursorConverter.swift` - 转换器，将解析结果转为 Mousecape 格式
 - `WindowsCursorMapping.swift` - 将 Windows 光标名称映射到 macOS 标识符
-- 需要 `ENABLE_WINDOWS_IMPORT` 编译器标志
+- `WindowsINFParser.swift` - 解析 Windows 光标主题的 install.inf 文件，提取光标映射关系
 
 ## 外部依赖
 
@@ -130,4 +147,28 @@ IBeam（文本光标）也有替代名称。守护进程会处理这些变体。
 ## 调试
 
 - `MMLog()` 宏用于彩色控制台输出（定义在 mousecloak 中）
-- 构建变体：Debug、Release、Debug-Dev、Release-Dev
+- 构建变体：Debug、Release
+
+## CI/CD
+
+项目使用 GitHub Actions 进行持续集成，配置文件位于 `.github/workflows/`。
+
+## 版本号修改
+
+修改版本号时需要更新以下位置：
+
+1. **Xcode 项目配置**（主要位置，其他文件引用此值）
+   - `Mousecape/Mousecape.xcodeproj/project.pbxproj`
+   - 搜索 `MARKETING_VERSION`，共 4 处（Debug、Debug-Dev、Release、Release-Dev）
+
+2. **主应用 Info.plist**
+   - `Mousecape/Mousecape/Mousecape-Info.plist`
+   - `CFBundleShortVersionString` 已设为 `$(MARKETING_VERSION)`，自动引用 Xcode 配置
+
+3. **守护进程 Info.plist**
+   - `Mousecape/mousecloakHelper/Info.plist`
+   - `CFBundleShortVersionString` 需手动修改
+
+4. **设置页面 fallback 版本号**
+   - `Mousecape/Mousecape/SwiftUI/Views/SettingsView.swift`
+   - 搜索 `Mousecape v`，修改 else 分支中的备用版本号

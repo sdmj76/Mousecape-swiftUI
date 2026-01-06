@@ -139,11 +139,17 @@ struct GeneralSettingsView: View {
 // MARK: - Appearance Settings
 
 struct AppearanceSettingsView: View {
-    @AppStorage("appearanceMode") private var appearanceMode = 0
+    /// appearanceMode: 1 = Light, 2 = Dark (默认 1 = Light)
+    @AppStorage("appearanceMode") private var appearanceMode = 1
     @AppStorage("showPreviewAnimations") private var showPreviewAnimations = true
     @AppStorage("showAuthorInfo") private var showAuthorInfo = true
     @AppStorage("previewGridColumns") private var previewGridColumns = 0
+    @AppStorage("transparentWindow") private var transparentWindow = false
     @Environment(LocalizationManager.self) private var localization
+
+    private var isDarkMode: Bool {
+        appearanceMode == 2
+    }
 
     var body: some View {
         @Bindable var localization = localization
@@ -151,11 +157,18 @@ struct AppearanceSettingsView: View {
         Form {
             Section(localization.localized("Theme")) {
                 Picker(localization.localized("Appearance"), selection: $appearanceMode) {
-                    Text(localization.localized("System")).tag(0)
                     Text(localization.localized("Light")).tag(1)
                     Text(localization.localized("Dark")).tag(2)
                 }
                 .pickerStyle(.radioGroup)
+
+                Toggle(localization.localized("Transparent Window"), isOn: $transparentWindow)
+                    .onChange(of: transparentWindow) { _, newValue in
+                        updateWindowTransparency(newValue)
+                    }
+                Text(localization.localized("Enable semi-transparent window background"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section(localization.localized("Language")) {
@@ -184,6 +197,24 @@ struct AppearanceSettingsView: View {
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
         .navigationTitle(localization.localized("Appearance"))
+    }
+
+    /// Update window transparency in real-time
+    private func updateWindowTransparency(_ transparent: Bool) {
+        guard let window = NSApp.windows.first else { return }
+        if transparent {
+            window.isOpaque = false
+            if isDarkMode {
+                // 深色模式：使用深灰色背景，避免与桌面混合时泛白
+                window.backgroundColor = NSColor(calibratedWhite: 0.15, alpha: 0.95)
+            } else {
+                // 浅色模式：使用系统窗口背景色
+                window.backgroundColor = NSColor.windowBackgroundColor.withAlphaComponent(0.9)
+            }
+        } else {
+            window.isOpaque = true
+            window.backgroundColor = NSColor.windowBackgroundColor
+        }
     }
 }
 
@@ -232,11 +263,11 @@ struct AdvancedSettingsView: View {
                        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
                         Text("Mousecape v\(version) (\(build))")
                     } else {
-                        Text("Mousecape v1.0.0")
+                        Text("Mousecape v1.0.1")
                     }
                 }
                 LabeledContent(localization.localized("System Requirements")) {
-                    Text("macOS 26+")
+                    Text("macOS 15+")
                 }
                 LabeledContent(localization.localized("Original Author")) {
                     Text("\u{00A9} 2014-2025 Alex Zielenski")

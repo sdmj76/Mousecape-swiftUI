@@ -5,8 +5,6 @@
 //  Maps Windows cursor filenames to macOS cursor types
 //
 
-#if ENABLE_WINDOWS_IMPORT
-
 import Foundation
 
 /// Maps Windows cursor names to macOS CursorType identifiers
@@ -81,5 +79,3 @@ struct WindowsCursorMapping {
         return Array(mapping.keys).sorted()
     }
 }
-
-#endif

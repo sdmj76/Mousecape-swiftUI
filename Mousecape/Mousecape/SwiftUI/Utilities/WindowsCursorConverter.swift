@@ -2,10 +2,9 @@
 //  WindowsCursorConverter.swift
 //  Mousecape
 //
-//  Converts Windows .cur/.ani cursor files using bundled Python + Pillow
+//  Converts Windows .cur/.ani cursor files using native Swift parser.
+//  No external dependencies required.
 //
-
-#if ENABLE_WINDOWS_IMPORT
 
 import Foundation
 import AppKit
@@ -27,22 +26,13 @@ struct WindowsCursorResult {
 // MARK: - Conversion Error
 
 enum WindowsCursorError: LocalizedError {
-    case pythonNotFound
-    case scriptNotFound
     case conversionFailed(String)
-    case invalidOutput
     case imageDecodeFailed
 
     var errorDescription: String? {
         switch self {
-        case .pythonNotFound:
-            return "Python environment not found in app bundle"
-        case .scriptNotFound:
-            return "Cursor conversion script not found"
         case .conversionFailed(let message):
             return "Conversion failed: \(message)"
-        case .invalidOutput:
-            return "Invalid output from conversion script"
         case .imageDecodeFailed:
             return "Failed to decode image data"
         }
@@ -68,201 +58,31 @@ final class WindowsCursorConverter: @unchecked Sendable {
     /// - Parameter fileURL: URL to .cur or .ani file
     /// - Returns: Conversion result with image data
     func convert(fileURL: URL) throws -> WindowsCursorResult {
-        let jsonOutput = try runConversionScript(arguments: [fileURL.path])
-        return try parseResult(jsonOutput, defaultFilename: fileURL.deletingPathExtension().lastPathComponent)
+        let filename = fileURL.deletingPathExtension().lastPathComponent
+
+        do {
+            let parseResult = try WindowsCursorParser.parse(fileURL: fileURL)
+            return try convertParseResult(parseResult, filename: filename)
+        } catch let error as WindowsCursorParserError {
+            throw WindowsCursorError.conversionFailed(error.localizedDescription)
+        }
     }
 
     /// Convert all cursor files in a folder
     /// - Parameter folderURL: URL to folder containing .cur/.ani files
     /// - Returns: Array of conversion results
     func convertFolder(folderURL: URL) throws -> [WindowsCursorResult] {
-        let jsonOutput = try runConversionScript(arguments: ["--folder", folderURL.path])
-        return try parseFolderResult(jsonOutput)
-    }
-
-    // MARK: - Async Public API
-
-    /// Convert all cursor files in a folder asynchronously
-    /// - Parameter folderURL: URL to folder containing .cur/.ani files
-    /// - Returns: Array of conversion results
-    func convertFolderAsync(folderURL: URL) async throws -> [WindowsCursorResult] {
-        let jsonOutput = try await runConversionScriptAsync(arguments: ["--folder", folderURL.path])
-        return try parseFolderResult(jsonOutput)
-    }
-
-    // MARK: - Private Methods
-
-    /// Find the bundled Python script and environment
-    private func findBundledResources() throws -> (scriptPath: String, wrapperPath: String) {
-        guard let resourcesPath = Bundle.main.resourcePath else {
-            throw WindowsCursorError.scriptNotFound
-        }
-
-        let wrapperPath = (resourcesPath as NSString).appendingPathComponent("run_curconvert.sh")
-        let scriptPath = (resourcesPath as NSString).appendingPathComponent("curconvert.py")
-
-        guard FileManager.default.fileExists(atPath: wrapperPath) else {
-            throw WindowsCursorError.pythonNotFound
-        }
-
-        guard FileManager.default.fileExists(atPath: scriptPath) else {
-            throw WindowsCursorError.scriptNotFound
-        }
-
-        return (scriptPath, wrapperPath)
-    }
-
-    /// Run the conversion script
-    private func runConversionScript(arguments: [String]) throws -> Data {
-        let resources = try findBundledResources()
-
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/bin/bash")
-        process.arguments = [resources.wrapperPath] + arguments
-
-        let outputPipe = Pipe()
-        let errorPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = errorPipe
-
-        try process.run()
-        process.waitUntilExit()
-
-        let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-
-        if process.terminationStatus != 0 {
-            let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-            let errorMessage = String(data: errorData, encoding: .utf8) ?? "Unknown error"
-            throw WindowsCursorError.conversionFailed(errorMessage)
-        }
-
-        return outputData
-    }
-
-    /// Run the conversion script asynchronously (doesn't block main thread)
-    private func runConversionScriptAsync(arguments: [String]) async throws -> Data {
-        let resources = try findBundledResources()
-
-        return try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async {
-                do {
-                    print("[WindowsCursorConverter] Starting process with arguments: \(arguments)")
-
-                    let process = Process()
-                    process.executableURL = URL(fileURLWithPath: "/bin/bash")
-                    process.arguments = [resources.wrapperPath] + arguments
-
-                    let outputPipe = Pipe()
-                    let errorPipe = Pipe()
-                    process.standardOutput = outputPipe
-                    process.standardError = errorPipe
-
-                    // Use thread-safe container
-                    class DataContainer: @unchecked Sendable {
-                        var outputData = Data()
-                        var errorData = Data()
-                        private let lock = NSLock()
-
-                        func appendOutput(_ data: Data) {
-                            lock.lock()
-                            defer { lock.unlock() }
-                            outputData.append(data)
-                        }
-
-                        func appendError(_ data: Data) {
-                            lock.lock()
-                            defer { lock.unlock() }
-                            errorData.append(data)
-                        }
-                    }
-
-                    let container = DataContainer()
-
-                    // Set up async data reading
-                    let outputHandle = outputPipe.fileHandleForReading
-                    let errorHandle = errorPipe.fileHandleForReading
-
-                    outputHandle.readabilityHandler = { handle in
-                        let data = handle.availableData
-                        if !data.isEmpty {
-                            container.appendOutput(data)
-                        }
-                    }
-
-                    errorHandle.readabilityHandler = { handle in
-                        let data = handle.availableData
-                        if !data.isEmpty {
-                            container.appendError(data)
-                        }
-                    }
-
-                    process.terminationHandler = { proc in
-                        // Clean up handlers
-                        outputHandle.readabilityHandler = nil
-                        errorHandle.readabilityHandler = nil
-
-                        // Read any remaining data
-                        container.appendOutput(outputHandle.readDataToEndOfFile())
-                        container.appendError(errorHandle.readDataToEndOfFile())
-
-                        print("[WindowsCursorConverter] Process finished with status: \(proc.terminationStatus)")
-                        print("[WindowsCursorConverter] Output size: \(container.outputData.count) bytes")
-
-                        if proc.terminationStatus != 0 {
-                            let errorMessage = String(data: container.errorData, encoding: .utf8) ?? "Unknown error"
-                            print("[WindowsCursorConverter] Error: \(errorMessage)")
-                            continuation.resume(throwing: WindowsCursorError.conversionFailed(errorMessage))
-                        } else {
-                            continuation.resume(returning: container.outputData)
-                        }
-                    }
-
-                    try process.run()
-                    print("[WindowsCursorConverter] Process started successfully")
-
-                } catch {
-                    print("[WindowsCursorConverter] Failed to start process: \(error)")
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
-    }
-
-    /// Parse single file result
-    private func parseResult(_ jsonData: Data, defaultFilename: String) throws -> WindowsCursorResult {
-        guard let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
-            throw WindowsCursorError.invalidOutput
-        }
-
-        guard json["success"] as? Bool == true else {
-            let error = json["error"] as? String ?? "Unknown error"
-            throw WindowsCursorError.conversionFailed(error)
-        }
-
-        return try parseResultDict(json, defaultFilename: defaultFilename)
-    }
-
-    /// Parse folder result
-    private func parseFolderResult(_ jsonData: Data) throws -> [WindowsCursorResult] {
-        guard let json = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any] else {
-            throw WindowsCursorError.invalidOutput
-        }
-
-        guard json["success"] as? Bool == true else {
-            let error = json["error"] as? String ?? "Unknown error"
-            throw WindowsCursorError.conversionFailed(error)
-        }
-
-        guard let cursors = json["cursors"] as? [[String: Any]] else {
-            throw WindowsCursorError.invalidOutput
+        let fileManager = FileManager.default
+        guard let enumerator = fileManager.enumerator(at: folderURL, includingPropertiesForKeys: nil) else {
+            throw WindowsCursorError.conversionFailed("Cannot enumerate folder")
         }
 
         var results: [WindowsCursorResult] = []
 
-        for cursorDict in cursors {
-            if cursorDict["success"] as? Bool == true {
-                let filename = cursorDict["filename"] as? String ?? "unknown"
-                if let result = try? parseResultDict(cursorDict, defaultFilename: filename) {
+        for case let fileURL as URL in enumerator {
+            let ext = fileURL.pathExtension.lowercased()
+            if ext == "cur" || ext == "ani" {
+                if let result = try? convert(fileURL: fileURL) {
                     results.append(result)
                 }
             }
@@ -271,32 +91,87 @@ final class WindowsCursorConverter: @unchecked Sendable {
         return results
     }
 
-    /// Parse a single result dictionary
-    private func parseResultDict(_ dict: [String: Any], defaultFilename: String) throws -> WindowsCursorResult {
-        guard let width = dict["width"] as? Int,
-              let height = dict["height"] as? Int,
-              let hotspotX = dict["hotspotX"] as? Int,
-              let hotspotY = dict["hotspotY"] as? Int,
-              let frameCount = dict["frameCount"] as? Int,
-              let imageDataBase64 = dict["imageData"] as? String else {
-            throw WindowsCursorError.invalidOutput
+    /// Convert cursor files in a folder using INF mapping
+    /// - Parameters:
+    ///   - folderURL: URL to folder containing .cur/.ani files and install.inf
+    ///   - infMapping: Parsed INF mapping from install.inf
+    /// - Returns: Array of (infKey, result) tuples for successful conversions
+    func convertFolderWithINF(folderURL: URL, infMapping: WindowsINFMapping) throws -> [(infKey: String, result: WindowsCursorResult)] {
+        var results: [(infKey: String, result: WindowsCursorResult)] = []
+
+        for (infKey, filename) in infMapping.cursorFiles {
+            let fileURL = folderURL.appendingPathComponent(filename)
+
+            // Check if file exists
+            guard FileManager.default.fileExists(atPath: fileURL.path) else {
+                print("INF referenced file not found: \(filename)")
+                continue
+            }
+
+            // Convert the file
+            do {
+                let result = try convert(fileURL: fileURL)
+                results.append((infKey: infKey, result: result))
+            } catch {
+                print("Failed to convert \(filename): \(error.localizedDescription)")
+            }
         }
 
-        let frameDuration = dict["frameDuration"] as? Double ?? 0.0
-        let filename = dict["filename"] as? String ?? defaultFilename
+        return results
+    }
 
-        guard let imageData = Data(base64Encoded: imageDataBase64) else {
+    // MARK: - Async Public API
+
+    /// Convert all cursor files in a folder asynchronously
+    /// - Parameter folderURL: URL to folder containing .cur/.ani files
+    /// - Returns: Array of conversion results
+    func convertFolderAsync(folderURL: URL) async throws -> [WindowsCursorResult] {
+        return try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let results = try self.convertFolder(folderURL: folderURL)
+                    continuation.resume(returning: results)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    /// Convert cursor files in a folder asynchronously using INF mapping
+    /// - Parameters:
+    ///   - folderURL: URL to folder containing .cur/.ani files and install.inf
+    ///   - infMapping: Parsed INF mapping from install.inf
+    /// - Returns: Array of (infKey, result) tuples for successful conversions
+    func convertFolderWithINFAsync(folderURL: URL, infMapping: WindowsINFMapping) async throws -> [(infKey: String, result: WindowsCursorResult)] {
+        return try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let results = try self.convertFolderWithINF(folderURL: folderURL, infMapping: infMapping)
+                    continuation.resume(returning: results)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    // MARK: - Private Methods
+
+    /// Convert a parse result to WindowsCursorResult
+    private func convertParseResult(_ parseResult: WindowsCursorParseResult, filename: String) throws -> WindowsCursorResult {
+        guard let pngData = parseResult.pngData() else {
             throw WindowsCursorError.imageDecodeFailed
         }
 
         return WindowsCursorResult(
-            width: width,
-            height: height,
-            hotspotX: hotspotX,
-            hotspotY: hotspotY,
-            frameCount: frameCount,
-            frameDuration: frameDuration,
-            imageData: imageData,
+            width: parseResult.width,
+            height: parseResult.height,
+            hotspotX: parseResult.hotspotX,
+            hotspotY: parseResult.hotspotY,
+            frameCount: parseResult.frameCount,
+            frameDuration: parseResult.frameDuration,
+            imageData: pngData,
             filename: filename
         )
     }
@@ -336,5 +211,3 @@ extension WindowsCursorResult {
         return cursor
     }
 }
-
-#endif

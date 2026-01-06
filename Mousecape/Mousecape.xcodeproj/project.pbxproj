@@ -27,13 +27,13 @@
 		DE525A832EFE93C200A315A3 /* OrderedSetSortedInsert.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE525A7E2EFE93C200A315A3 /* OrderedSetSortedInsert.swift */; };
 		DE525A842EFE93C200A315A3 /* WindowsCursorMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE525A802EFE93C200A315A3 /* WindowsCursorMapping.swift */; };
 		DE525A852EFE93C200A315A3 /* DirectoryLocations.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE525A7D2EFE93C200A315A3 /* DirectoryLocations.swift */; };
-		DE525A8A2EFE93D500A315A3 /* curconvert.py in Resources */ = {isa = PBXBuildFile; fileRef = DE525A872EFE93D500A315A3 /* curconvert.py */; };
-		DE525A8B2EFE93D500A315A3 /* bundle_python.sh in Resources */ = {isa = PBXBuildFile; fileRef = DE525A862EFE93D500A315A3 /* bundle_python.sh */; };
+		DE654C422F0A6DB40025E5A0 /* WindowsINFParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE654C412F0A6DB40025E5A0 /* WindowsINFParser.swift */; };
+		DE6B14B42F0512EE00742257 /* WindowsCursorParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE6B14B32F0512EE00742257 /* WindowsCursorParser.swift */; };
 		FA000001UTITYPES00000001 /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA000001UTITYPES00000000 /* UniformTypeIdentifiers.framework */; };
 		FA1DC01919527A73009E879C /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA359844189DBA3800288163 /* SystemConfiguration.framework */; };
 		FA1DC01A19527A79009E879C /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA254779189D85890038E1D9 /* ApplicationServices.framework */; };
 		FA35983F189DA3BC00288163 /* MCPrefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FA35983E189DA3BC00288163 /* MCPrefs.m */; };
-		FA359840189DA3C100288163 /* MCPrefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FA35983E189DA3BC00288163 /* MCPrefs.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		FA359840189DA3C100288163 /* MCPrefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FA35983E189DA3BC00288163 /* MCPrefs.m */; };
 		FA359849189DC40100288163 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA359848189DC40100288163 /* Security.framework */; };
 		FA35984D189DC55A00288163 /* ServiceManagement.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA35984C189DC55A00288163 /* ServiceManagement.framework */; };
 		FA359852189E035900288163 /* listen.m in Sources */ = {isa = PBXBuildFile; fileRef = FA359851189E035900288163 /* listen.m */; };
@@ -45,12 +45,12 @@
 		FA8FF774189D67B100750E51 /* create.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF773189D67B100750E51 /* create.m */; };
 		FA9A48AB2353C6EF009CF05E /* NSBitmapImageRep+ColorSpace.m in Sources */ = {isa = PBXBuildFile; fileRef = FABA44D321D9D7D0009B10D9 /* NSBitmapImageRep+ColorSpace.m */; };
 		FAAEF8F7189EB34700145DF8 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAAEF8F6189EB34700145DF8 /* QuartzCore.framework */; };
-		FAAEF94E189EFC9300145DF8 /* create.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF773189D67B100750E51 /* create.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		FAAEF94F189EFC9600145DF8 /* backup.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF76D189D66CB00750E51 /* backup.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		FAAEF950189EFC9800145DF8 /* apply.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF770189D66D800750E51 /* apply.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		FAAEF951189F0CC300145DF8 /* restore.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF76A189D664400750E51 /* restore.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		FAAEF94E189EFC9300145DF8 /* create.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF773189D67B100750E51 /* create.m */; };
+		FAAEF94F189EFC9600145DF8 /* backup.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF76D189D66CB00750E51 /* backup.m */; };
+		FAAEF950189EFC9800145DF8 /* apply.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF770189D66D800750E51 /* apply.m */; };
+		FAAEF951189F0CC300145DF8 /* restore.m in Sources */ = {isa = PBXBuildFile; fileRef = FA8FF76A189D664400750E51 /* restore.m */; };
 		FAAEF957189F4ED300145DF8 /* scale.m in Sources */ = {isa = PBXBuildFile; fileRef = FAAEF956189F4ED300145DF8 /* scale.m */; };
-		FAAEF958189F4F8200145DF8 /* scale.m in Sources */ = {isa = PBXBuildFile; fileRef = FAAEF956189F4ED300145DF8 /* scale.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		FAAEF958189F4F8200145DF8 /* scale.m in Sources */ = {isa = PBXBuildFile; fileRef = FAAEF956189F4ED300145DF8 /* scale.m */; };
 		FABA44D421D9D7D0009B10D9 /* NSBitmapImageRep+ColorSpace.m in Sources */ = {isa = PBXBuildFile; fileRef = FABA44D321D9D7D0009B10D9 /* NSBitmapImageRep+ColorSpace.m */; };
 		FABA44D521D9D947009B10D9 /* NSBitmapImageRep+ColorSpace.m in Sources */ = {isa = PBXBuildFile; fileRef = FABA44D321D9D7D0009B10D9 /* NSBitmapImageRep+ColorSpace.m */; };
 		FAC69F65189D603C00BC829D /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAC69F64189D603C00BC829D /* Cocoa.framework */; };
@@ -60,7 +60,7 @@
 		FAC69FD5189D609B00BC829D /* GBOptionsHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = FAC69FD1189D609B00BC829D /* GBOptionsHelper.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		FAC69FD6189D609B00BC829D /* GBSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = FAC69FD3189D609B00BC829D /* GBSettings.m */; settings = {COMPILER_FLAGS = "-fobjc-arc"; }; };
 		FAC69FDA189D632B00BC829D /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAC69F64189D603C00BC829D /* Cocoa.framework */; };
-		FAC69FDC189D636700BC829D /* MCDefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FAC69FDB189D636700BC829D /* MCDefs.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		FAC69FDC189D636700BC829D /* MCDefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FAC69FDB189D636700BC829D /* MCDefs.m */; };
 		FAC69FDD189D636700BC829D /* MCDefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FAC69FDB189D636700BC829D /* MCDefs.m */; };
 		FAE5D56C1952700B007620DE /* MCDefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FAC69FDB189D636700BC829D /* MCDefs.m */; };
 		FAE5D56D1952700B007620DE /* MCPrefs.m in Sources */ = {isa = PBXBuildFile; fileRef = FA35983E189DA3BC00288163 /* MCPrefs.m */; };
@@ -142,8 +142,8 @@
 		DE525A7E2EFE93C200A315A3 /* OrderedSetSortedInsert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderedSetSortedInsert.swift; sourceTree = "<group>"; };
 		DE525A7F2EFE93C200A315A3 /* WindowsCursorConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowsCursorConverter.swift; sourceTree = "<group>"; };
 		DE525A802EFE93C200A315A3 /* WindowsCursorMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowsCursorMapping.swift; sourceTree = "<group>"; };
-		DE525A862EFE93D500A315A3 /* bundle_python.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = bundle_python.sh; sourceTree = "<group>"; };
-		DE525A872EFE93D500A315A3 /* curconvert.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = curconvert.py; sourceTree = "<group>"; };
+		DE654C412F0A6DB40025E5A0 /* WindowsINFParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowsINFParser.swift; sourceTree = "<group>"; };
+		DE6B14B32F0512EE00742257 /* WindowsCursorParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowsCursorParser.swift; sourceTree = "<group>"; };
 		FA000001UTITYPES00000000 /* UniformTypeIdentifiers.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UniformTypeIdentifiers.framework; path = System/Library/Frameworks/UniformTypeIdentifiers.framework; sourceTree = SDKROOT; };
 		FA1DC01719527A56009E879C /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		FA254779189D85890038E1D9 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
@@ -304,29 +304,14 @@
 		DE525A812EFE93C200A315A3 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				DE654C412F0A6DB40025E5A0 /* WindowsINFParser.swift */,
+				DE6B14B32F0512EE00742257 /* WindowsCursorParser.swift */,
 				DE525A7D2EFE93C200A315A3 /* DirectoryLocations.swift */,
 				DE525A7E2EFE93C200A315A3 /* OrderedSetSortedInsert.swift */,
 				DE525A7F2EFE93C200A315A3 /* WindowsCursorConverter.swift */,
 				DE525A802EFE93C200A315A3 /* WindowsCursorMapping.swift */,
 			);
 			path = Utilities;
-			sourceTree = "<group>";
-		};
-		DE525A882EFE93D500A315A3 /* Scripts */ = {
-			isa = PBXGroup;
-			children = (
-				DE525A862EFE93D500A315A3 /* bundle_python.sh */,
-				DE525A872EFE93D500A315A3 /* curconvert.py */,
-			);
-			path = Scripts;
-			sourceTree = "<group>";
-		};
-		DE525A892EFE93D500A315A3 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				DE525A882EFE93D500A315A3 /* Scripts */,
-			);
-			path = Resources;
 			sourceTree = "<group>";
 		};
 		FAC69F58189D603C00BC829D = {
@@ -381,7 +366,6 @@
 		FAC69F6A189D603C00BC829D /* Mousecape */ = {
 			isa = PBXGroup;
 			children = (
-				DE525A892EFE93D500A315A3 /* Resources */,
 				DE3661FB2EFAAAB600D94521 /* SwiftUI */,
 				FA5733A32495667900103FCF /* Mousecape.entitlements */,
 				FAEE650D18A047E8003AA182 /* controllers */,
@@ -532,7 +516,6 @@
 			buildPhases = (
 				FAC69F5D189D603C00BC829D /* Sources */,
 				FAC69F5F189D603C00BC829D /* Resources */,
-				DE525A5E2EFE8FBA00A315A3 /* Bundle Python Environment */,
 				FAC69F5E189D603C00BC829D /* Frameworks */,
 				FA359841189DAAF900288163 /* Build Number */,
 				FAE5D57D1952734F007620DE /* Copy Tool */,
@@ -629,8 +612,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DE525A8A2EFE93D500A315A3 /* curconvert.py in Resources */,
-				DE525A8B2EFE93D500A315A3 /* bundle_python.sh in Resources */,
 				FAC69F7D189D603C00BC829D /* Images.xcassets in Resources */,
 				DE3661FC2EFAAAB600D94521 /* README.md in Resources */,
 			);
@@ -646,25 +627,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		DE525A5E2EFE8FBA00A315A3 /* Bundle Python Environment */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Bundle Python Environment";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# 只在 Dev 配置下执行（Debug-Dev 或 Release-Dev）\nif [ \"$CONFIGURATION\" == \"Debug-Dev\" ] || [ \"$CONFIGURATION\" == \"Release-Dev\" ]; then\n    echo \"Bundling Python environment for Windows cursor import...\"\n    \"${SRCROOT}/Mousecape/Resources/Scripts/bundle_python.sh\"\nfi\n";
-		};
 		FA359841189DAAF900288163 /* Build Number */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -693,11 +655,13 @@
 				FAAEF94E189EFC9300145DF8 /* create.m in Sources */,
 				FAAEF94F189EFC9600145DF8 /* backup.m in Sources */,
 				FAAEF951189F0CC300145DF8 /* restore.m in Sources */,
+				DE654C422F0A6DB40025E5A0 /* WindowsINFParser.swift in Sources */,
 				DE525A822EFE93C200A315A3 /* WindowsCursorConverter.swift in Sources */,
 				DE525A832EFE93C200A315A3 /* OrderedSetSortedInsert.swift in Sources */,
 				DE525A842EFE93C200A315A3 /* WindowsCursorMapping.swift in Sources */,
 				DE525A852EFE93C200A315A3 /* DirectoryLocations.swift in Sources */,
 				FAAEF950189EFC9800145DF8 /* apply.m in Sources */,
+				DE6B14B42F0512EE00742257 /* WindowsCursorParser.swift in Sources */,
 				FAEE653218A047E8003AA182 /* MCCursor.m in Sources */,
 				FAAEF958189F4F8200145DF8 /* scale.m in Sources */,
 				DE3661FD2EFAAAB600D94521 /* MainView.swift in Sources */,
@@ -818,7 +782,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -844,7 +808,7 @@
 					"$(LD_RUNPATH_SEARCH_PATHS_$(IS_MACCATALYST))",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				OTHER_SWIFT_FLAGS = "-DENABLE_WINDOWS_IMPORT";
 				PRODUCT_BUNDLE_IDENTIFIER = com.sdmj76.Mousecape;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -973,7 +937,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				SDKROOT = macosx;
 			};
 			name = "Release-Dev";
@@ -998,7 +962,7 @@
 					"$(LD_RUNPATH_SEARCH_PATHS_$(IS_MACCATALYST))",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				OTHER_SWIFT_FLAGS = "-DENABLE_WINDOWS_IMPORT";
 				PRODUCT_BUNDLE_IDENTIFIER = com.sdmj76.Mousecape;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1123,7 +1087,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -1174,7 +1138,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -1199,7 +1163,7 @@
 					"$(LD_RUNPATH_SEARCH_PATHS_$(IS_MACCATALYST))",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sdmj76.Mousecape;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1230,7 +1194,7 @@
 					"$(LD_RUNPATH_SEARCH_PATHS_$(IS_MACCATALYST))",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.sdmj76.Mousecape;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1243,7 +1207,7 @@
 		FAC69FB7189D608A00BC829D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
@@ -1272,7 +1236,7 @@
 		FAC69FB8189D608A00BC829D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
