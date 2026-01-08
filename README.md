@@ -105,6 +105,30 @@ If the folder contains an `install.inf` file, Mousecape will automatically parse
 - **Standard image formats**: PNG, JPEG, TIFF, GIF
 - **Windows cursor formats**: .cur (static), .ani (animated)
 
+### Custom Windows Cursor Mapping
+
+Mousecape reads the `[Scheme.Reg]` section from Windows cursor INF files for automatic cursor type detection. The position order in `[Scheme.Reg]` follows the Windows registry standard format (positions 0-16):
+
+| Position | Windows Cursor Type | macOS Cursor |
+|:---------|:-------------------|:-------------|
+| 0 | Normal Select | Arrow |
+| 1 | Help Select | Help |
+| 2 | Working in Background | Wait |
+| 3 | Busy | Busy |
+| 4 | Precision Select | Crosshair |
+| 5 | Text Select | IBeam |
+| 6 | Handwriting | Open |
+| 7 | Unavailable | Forbidden |
+| 8 | Vertical Resize | Resize N-S, Window N-S |
+| 9 | Horizontal Resize | Resize W-E, Window W-E |
+| 10 | Diagonal Resize 1 | Window NW-SE |
+| 11 | Diagonal Resize 2 | Window NE-SW |
+| 12 | Move | Move |
+| 13 | Alternate Select | Alias |
+| 14 | Link Select | Pointing, Link |
+| 15 | Location Select | (No macOS equivalent) |
+| 16 | Person Select | (No macOS equivalent) |
+
 ## Troubleshooting
 
 If you encounter issues, please check the common solutions below first. For more help, please [submit an Issue](https://github.com/sdmj76/Mousecape/issues).
@@ -270,6 +294,30 @@ Mousecape 支持批量导入 Windows 光标主题：
 
 - **常规图片格式**：PNG、JPEG、TIFF、GIF
 - **Windows 光标格式**：.cur（静态）、.ani（动画）
+
+### 自定义 Windows 光标映射
+
+Mousecape 通过读取 Windows 光标 INF 文件中的 `[Scheme.Reg]` 段来自动识别光标类型。`[Scheme.Reg]` 中的位置顺序遵循 Windows 注册表标准格式（位置 0-16）：
+
+| 位置 | Windows 光标类型 | macOS 光标 |
+|:----|:----------------|:----------|
+| 0 | Normal Select | Arrow |
+| 1 | Help Select | Help |
+| 2 | Working in Background | Wait |
+| 3 | Busy | Busy |
+| 4 | Precision Select | Crosshair |
+| 5 | Text Select | IBeam |
+| 6 | Handwriting | Open |
+| 7 | Unavailable | Forbidden |
+| 8 | Vertical Resize | Resize N-S, Window N-S |
+| 9 | Horizontal Resize | Resize W-E, Window W-E |
+| 10 | Diagonal Resize 1 | Window NW-SE |
+| 11 | Diagonal Resize 2 | Window NE-SW |
+| 12 | Move | Move |
+| 13 | Alternate Select | Alias |
+| 14 | Link Select | Pointing, Link |
+| 15 | Location Select | （无 macOS 对应） |
+| 16 | Person Select | （无 macOS 对应） |
 
 ## 故障排除
 

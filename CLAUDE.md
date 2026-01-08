@@ -128,8 +128,35 @@ Cape 是二进制 plist 文件（`.cape` 扩展名），包含：
 使用原生 Swift 实现，无需外部依赖：
 - `WindowsCursorParser.swift` - 原生 Swift 解析器，支持 .cur/.ani 格式
 - `WindowsCursorConverter.swift` - 转换器，将解析结果转为 Mousecape 格式
-- `WindowsCursorMapping.swift` - 将 Windows 光标名称映射到 macOS 标识符
-- `WindowsINFParser.swift` - 解析 Windows 光标主题的 install.inf 文件，提取光标映射关系
+- `WindowsINFParser.swift` - 解析 Windows install.inf 文件，基于 `[Scheme.Reg]` 位置映射
+- `WindowsCursorMapping.swift` - 文件名 fallback 映射（当无有效 INF 时使用）
+
+### INF 解析逻辑
+
+Windows 光标主题通过 `[Scheme.Reg]` 段定义光标位置顺序（固定 0-16 位），这是 Windows 注册表的标准格式：
+
+| 位置 | Windows 光标 | macOS CursorType |
+|-----|-------------|------------------|
+| 0 | Normal Select | `.arrow`, `.arrowCtx` |
+| 1 | Help Select | `.help` |
+| 2 | Working in Background | `.wait` |
+| 3 | Busy | `.busy` |
+| 4 | Precision Select | `.crosshair` |
+| 5 | Text Select | `.iBeam`, `.iBeamXOR` |
+| 6 | Handwriting | `.open` |
+| 7 | Unavailable | `.forbidden` |
+| 8 | Vertical Resize | `.resizeNS`, `.windowNS` |
+| 9 | Horizontal Resize | `.resizeWE`, `.windowEW` |
+| 10 | Diagonal Resize 1 | `.windowNWSE` |
+| 11 | Diagonal Resize 2 | `.windowNESW` |
+| 12 | Move | `.move` |
+| 13 | Alternate Select | `.alias` |
+| 14 | Link Select | `.pointing`, `.link` |
+| 15-16 | Location/Person | 无 macOS 对应 |
+
+路径解析支持两种格式：
+- `%10%\Cursors\%pointer%` - 从 `[Strings]` 段查找变量对应的文件名
+- `%10%\Cursors\Normal.ani` - 直接使用文件名
 
 ## 外部依赖
 

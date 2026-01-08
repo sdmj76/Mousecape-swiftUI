@@ -3,14 +3,15 @@
 //  Mousecape
 //
 //  Parses Windows cursor install.inf files to extract cursor mappings.
+//  Uses [Scheme.Reg] position-based mapping for reliable cursor type detection.
 //
 
 import Foundation
 
 /// Represents a parsed install.inf file with cursor mappings
 struct WindowsINFMapping {
-    /// Mapping from cursor type key (e.g., "pointer") to filename (e.g., "Normal.ani")
-    let cursorFiles: [String: String]
+    /// Mapping from position index (0-16) to filename
+    let cursorFilesByPosition: [Int: String]
 
     /// Scheme name from the INF
     let schemeName: String?
@@ -22,33 +23,30 @@ struct WindowsINFMapping {
 /// Parser for Windows cursor install.inf files
 struct WindowsINFParser {
 
-    /// INF cursor key to macOS cursor type mapping
-    /// These keys come from the [Strings] section of install.inf
-    /// Based on Mac-Windows cursor comparison table
-    /// Note: Some INF files use alternate key names (e.g., "work" vs "working", "cross" vs "precision")
-    static let infKeyToMacOS: [String: [CursorType]] = [
-        // Direct mappings from comparison table
-        "pointer": [.arrow],           // Arrow
-        "text": [.iBeam],              // IBeam
-        "link": [.pointing],           // Pointing (Hand/Link cursor)
-        "busy": [.busy],               // Busy (Wait in registry)
-        "working": [.wait],            // Wait (AppStarting in registry)
-        "work": [.wait],               // Alternate name for Wait
-        "precision": [.crosshair],     // Crosshair
-        "cross": [.crosshair],         // Alternate name for Crosshair
-        "unavailable": [.forbidden],   // Forbidden
-        "vert": [.resizeNS, .windowNS], // Resize N-S and Window N-S
-        "horz": [.resizeWE, .windowEW], // Resize W-E and Window W-E
-        "dgn1": [.windowNWSE],         // Window NW-SE (SizeNWSE)
-        "dgn2": [.windowNESW],         // Window NE-SW (SizeNESW)
-        "move": [.move],               // Move
-        "help": [.help],               // Help
-        // Windows-only cursors (no macOS equivalent) - skipped:
-        // "alternate" (UpArrow), "hand" (NWPen/Handwriting), "person", "pin", "location"
+    /// Windows registry fixed-order cursor type mapping (positions 0-16)
+    /// Based on Windows Control Panel\Cursors\Schemes registry format
+    static let schemeRegPositionMapping: [[CursorType]] = [
+        [.arrow, .arrowCtx],           // 0: Normal Select
+        [.help],                        // 1: Help Select
+        [.wait],                        // 2: Working in Background
+        [.busy],                        // 3: Busy
+        [.crosshair],                   // 4: Precision Select
+        [.iBeam, .iBeamXOR],           // 5: Text Select
+        [.open],                        // 6: Handwriting (com.apple.cursor.12)
+        [.forbidden],                   // 7: Unavailable
+        [.resizeNS, .windowNS],        // 8: Vertical Resize
+        [.resizeWE, .windowEW],        // 9: Horizontal Resize
+        [.windowNWSE],                  // 10: Diagonal Resize 1 (NW-SE)
+        [.windowNESW],                  // 11: Diagonal Resize 2 (NE-SW)
+        [.move],                        // 12: Move
+        [.alias],                       // 13: Alternate Select
+        [.pointing, .link],            // 14: Link Select
+        [],                             // 15: Location Select (no macOS equivalent)
+        [],                             // 16: Person Select (no macOS equivalent)
     ]
 
     /// Parse an install.inf file
-    /// - Parameter url: URL to the install.inf file
+    /// - Parameter url: URL to the .inf file
     /// - Returns: Parsed INF mapping, or nil if parsing failed
     static func parse(url: URL) -> WindowsINFMapping? {
         guard let content = try? String(contentsOf: url, encoding: .utf8) else {
@@ -63,12 +61,122 @@ struct WindowsINFParser {
 
     /// Parse INF content string
     private static func parseContent(_ content: String) -> WindowsINFMapping? {
-        var cursorFiles: [String: String] = [:]
-        var schemeName: String?
-        var cursorDir: String?
-
-        // Find [Strings] section
         let lines = content.components(separatedBy: .newlines)
+
+        // Step 1: Parse [Scheme.Reg] section to get cursor paths
+        guard let schemeRegLine = findSchemeRegLine(lines) else {
+            return nil
+        }
+
+        // Step 2: Extract cursor paths from Scheme.Reg
+        let cursorPaths = extractCursorPaths(from: schemeRegLine)
+        guard !cursorPaths.isEmpty else {
+            return nil
+        }
+
+        // Step 3: Parse [Strings] section (optional, for variable resolution)
+        let strings = parseStringsSection(lines)
+
+        // Step 4: Build position-to-filename mapping
+        var cursorFilesByPosition: [Int: String] = [:]
+        for (position, path) in cursorPaths.enumerated() {
+            if let filename = resolveFilename(from: path, strings: strings) {
+                cursorFilesByPosition[position] = filename
+            }
+        }
+
+        guard !cursorFilesByPosition.isEmpty else { return nil }
+
+        return WindowsINFMapping(
+            cursorFilesByPosition: cursorFilesByPosition,
+            schemeName: strings["scheme_name"],
+            cursorDir: strings["cur_dir"]
+        )
+    }
+
+    /// Find the HKCU,"Control Panel\Cursors\Schemes" line in [Scheme.Reg] section
+    private static func findSchemeRegLine(_ lines: [String]) -> String? {
+        var inSchemeRegSection = false
+
+        for line in lines {
+            let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+
+            // Check for section headers
+            if trimmedLine.hasPrefix("[") && trimmedLine.hasSuffix("]") {
+                inSchemeRegSection = trimmedLine.lowercased() == "[scheme.reg]"
+                continue
+            }
+
+            // Look for the Cursors\Schemes line
+            if inSchemeRegSection && !trimmedLine.isEmpty && !trimmedLine.hasPrefix(";") {
+                let lowercased = trimmedLine.lowercased()
+                if lowercased.contains("control panel\\cursors\\schemes") ||
+                   lowercased.contains("control panel\\\\cursors\\\\schemes") {
+                    return trimmedLine
+                }
+            }
+        }
+
+        return nil
+    }
+
+    /// Extract cursor paths from Scheme.Reg line
+    /// Input: HKCU,"Control Panel\Cursors\Schemes","%SCHEME_NAME%",,"%10%\%CUR_DIR%\%pointer%,%10%\%CUR_DIR%\Normal.ani,..."
+    /// Output: ["%10%\%CUR_DIR%\%pointer%", "%10%\%CUR_DIR%\Normal.ani", ...]
+    private static func extractCursorPaths(from schemeRegLine: String) -> [String] {
+        // Split by ",," to find the cursor list part (after the empty field)
+        let parts = schemeRegLine.components(separatedBy: ",,")
+        guard parts.count >= 2 else { return [] }
+
+        // Get the cursor list part (everything after ",,")
+        let cursorListPart = parts.dropFirst().joined(separator: ",,")
+
+        // Remove surrounding quotes if present
+        var cursorList = cursorListPart.trimmingCharacters(in: .whitespaces)
+        if cursorList.hasPrefix("\"") && cursorList.hasSuffix("\"") && cursorList.count >= 2 {
+            cursorList = String(cursorList.dropFirst().dropLast())
+        }
+
+        // Split by comma to get individual cursor paths
+        return cursorList.components(separatedBy: ",")
+    }
+
+    /// Resolve filename from a cursor path
+    /// - If path ends with %variable%, look up in strings
+    /// - If path ends with filename.ext, use directly
+    private static func resolveFilename(from path: String, strings: [String: String]) -> String? {
+        let trimmedPath = path.trimmingCharacters(in: .whitespaces)
+        guard !trimmedPath.isEmpty else { return nil }
+
+        // Get the last component (after last \ or /)
+        let lastComponent: String
+        if let lastBackslash = trimmedPath.lastIndex(of: "\\") {
+            lastComponent = String(trimmedPath[trimmedPath.index(after: lastBackslash)...])
+        } else if let lastSlash = trimmedPath.lastIndex(of: "/") {
+            lastComponent = String(trimmedPath[trimmedPath.index(after: lastSlash)...])
+        } else {
+            lastComponent = trimmedPath
+        }
+
+        // Check if it's a variable reference like %pointer%
+        if lastComponent.hasPrefix("%") && lastComponent.hasSuffix("%") && lastComponent.count > 2 {
+            // Extract variable name and look up in strings
+            let varName = String(lastComponent.dropFirst().dropLast()).lowercased()
+            return strings[varName]
+        }
+
+        // Otherwise, it's a direct filename - just clean it up
+        let filename = lastComponent
+        // Remove any remaining % markers that might be path variables
+        if filename.contains("%") {
+            return nil // Invalid format
+        }
+        return filename.isEmpty ? nil : filename
+    }
+
+    /// Parse [Strings] section to get all variable definitions (optional)
+    private static func parseStringsSection(_ lines: [String]) -> [String: String] {
+        var strings: [String: String] = [:]
         var inStringsSection = false
 
         for line in lines {
@@ -82,29 +190,13 @@ struct WindowsINFParser {
 
             // Parse lines in [Strings] section
             if inStringsSection && !trimmedLine.isEmpty && !trimmedLine.hasPrefix(";") {
-                // Parse key = "value" format
                 if let (key, value) = parseKeyValue(trimmedLine) {
-                    let lowercaseKey = key.lowercased()
-
-                    if lowercaseKey == "scheme_name" {
-                        schemeName = value
-                    } else if lowercaseKey == "cur_dir" {
-                        cursorDir = value
-                    } else if infKeyToMacOS[lowercaseKey] != nil {
-                        // This is a cursor key - store the filename
-                        cursorFiles[lowercaseKey] = value
-                    }
+                    strings[key.lowercased()] = value
                 }
             }
         }
 
-        guard !cursorFiles.isEmpty else { return nil }
-
-        return WindowsINFMapping(
-            cursorFiles: cursorFiles,
-            schemeName: schemeName,
-            cursorDir: cursorDir
-        )
+        return strings
     }
 
     /// Parse a key = value line
@@ -125,17 +217,21 @@ struct WindowsINFParser {
         return (key, value)
     }
 
-    /// Get macOS cursor types for an INF key
-    /// - Parameter infKey: Key from INF [Strings] section (e.g., "pointer", "help")
+    /// Get macOS cursor types for a position index
+    /// - Parameter position: Position index (0-16) from Scheme.Reg
     /// - Returns: Array of matching CursorType
-    static func cursorTypes(for infKey: String) -> [CursorType] {
-        return infKeyToMacOS[infKey.lowercased()] ?? []
+    static func cursorTypes(forPosition position: Int) -> [CursorType] {
+        guard position >= 0 && position < schemeRegPositionMapping.count else {
+            return []
+        }
+        return schemeRegPositionMapping[position]
     }
 
-    /// Find install.inf in a folder (case-insensitive)
+    /// Find and parse a valid INF file in a folder
+    /// Searches for all *.inf files and returns the first one with valid [Scheme.Reg]
     /// - Parameter folderURL: Folder to search in
-    /// - Returns: URL to install.inf if found
-    static func findINF(in folderURL: URL) -> URL? {
+    /// - Returns: Parsed INF mapping if found, nil otherwise
+    static func findValidINF(in folderURL: URL) -> WindowsINFMapping? {
         let fileManager = FileManager.default
 
         guard let contents = try? fileManager.contentsOfDirectory(
@@ -146,10 +242,13 @@ struct WindowsINFParser {
             return nil
         }
 
-        // Look for install.inf (case-insensitive)
-        for url in contents {
-            if url.lastPathComponent.lowercased() == "install.inf" {
-                return url
+        // Find all .inf files
+        let infFiles = contents.filter { $0.pathExtension.lowercased() == "inf" }
+
+        // Try each INF file until we find a valid one
+        for infURL in infFiles {
+            if let mapping = parse(url: infURL) {
+                return mapping
             }
         }
 
