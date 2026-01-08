@@ -950,6 +950,11 @@ struct CursorPreviewDropZone: View {
             return loadWindowsCursor(from: url)
         }
 
+        // Check if it's a GIF file - handle animation
+        if ext == "gif" {
+            return loadGIFImage(from: url)
+        }
+
         guard let image = NSImage(contentsOf: url) else {
             print("Failed to load image from: \(url)")
             return false
@@ -991,6 +996,220 @@ struct CursorPreviewDropZone: View {
 
         print("Image imported successfully: \(originalWidth)x\(originalHeight) → \(standardCursorSize)x\(standardCursorSize)")
         return true
+    }
+
+    // MARK: - GIF Import
+
+    /// Load an animated GIF file and extract all frames
+    private func loadGIFImage(from url: URL) -> Bool {
+        guard let data = try? Data(contentsOf: url) else {
+            print("Failed to read GIF data from: \(url)")
+            return false
+        }
+
+        guard let imageSource = CGImageSourceCreateWithData(data as CFData, nil) else {
+            print("Failed to create image source from GIF")
+            return false
+        }
+
+        let frameCount = CGImageSourceGetCount(imageSource)
+        guard frameCount > 0 else {
+            print("GIF has no frames")
+            return false
+        }
+
+        // For single-frame GIFs, treat as static image
+        if frameCount == 1 {
+            guard let cgImage = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) else {
+                print("Failed to get first GIF frame")
+                return false
+            }
+            let bitmap = NSBitmapImageRep(cgImage: cgImage)
+            guard let scaledBitmap = scaleImageToStandardSize(bitmap) else {
+                print("Failed to scale GIF image")
+                return false
+            }
+
+            cursor.setRepresentation(scaledBitmap, for: targetScale)
+            cursor.size = NSSize(width: 32, height: 32)
+            cursor.frameCount = 1
+            cursor.frameDuration = 0.0
+
+            appState.markAsChanged()
+            localRefreshTrigger += 1
+            appState.cursorListRefreshTrigger += 1
+
+            print("Static GIF imported successfully")
+            return true
+        }
+
+        // Multi-frame GIF - extract all frames
+        var frames: [NSBitmapImageRep] = []
+        var totalDuration: Double = 0.0
+        var frameWidth: Int = 0
+        var frameHeight: Int = 0
+
+        for i in 0..<frameCount {
+            guard let cgImage = CGImageSourceCreateImageAtIndex(imageSource, i, nil) else {
+                continue
+            }
+
+            let bitmap = NSBitmapImageRep(cgImage: cgImage)
+            frames.append(bitmap)
+
+            if i == 0 {
+                frameWidth = bitmap.pixelsWide
+                frameHeight = bitmap.pixelsHigh
+            }
+
+            // Get frame duration from GIF properties
+            if let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, i, nil) as? [String: Any],
+               let gifProperties = properties[kCGImagePropertyGIFDictionary as String] as? [String: Any] {
+                // Try unclamped delay time first, then delay time
+                if let delay = gifProperties[kCGImagePropertyGIFUnclampedDelayTime as String] as? Double, delay > 0 {
+                    totalDuration += delay
+                } else if let delay = gifProperties[kCGImagePropertyGIFDelayTime as String] as? Double, delay > 0 {
+                    totalDuration += delay
+                } else {
+                    totalDuration += 0.1  // Default 100ms per frame
+                }
+            } else {
+                totalDuration += 0.1
+            }
+        }
+
+        guard !frames.isEmpty else {
+            print("Failed to extract any frames from GIF")
+            return false
+        }
+
+        // Calculate average frame duration
+        let avgFrameDuration = totalDuration / Double(frames.count)
+
+        // Create a sprite sheet (all frames stacked vertically)
+        guard let spriteSheet = createSpriteSheet(from: frames, frameWidth: frameWidth, frameHeight: frameHeight) else {
+            print("Failed to create sprite sheet from GIF frames")
+            return false
+        }
+
+        // Scale the sprite sheet
+        guard let scaledSpriteSheet = scaleGIFSpriteSheet(spriteSheet, frameCount: frames.count, originalFrameWidth: frameWidth, originalFrameHeight: frameHeight) else {
+            print("Failed to scale GIF sprite sheet")
+            return false
+        }
+
+        cursor.setRepresentation(scaledSpriteSheet, for: targetScale)
+        cursor.size = NSSize(width: 32, height: 32)
+        cursor.frameCount = frames.count
+        cursor.frameDuration = CGFloat(avgFrameDuration)
+
+        appState.markAsChanged()
+        localRefreshTrigger += 1
+        appState.cursorListRefreshTrigger += 1
+
+        print("Animated GIF imported: \(frameWidth)x\(frameHeight), \(frames.count) frames, \(String(format: "%.3f", avgFrameDuration))s/frame")
+        return true
+    }
+
+    /// Create a vertical sprite sheet from individual frames
+    private func createSpriteSheet(from frames: [NSBitmapImageRep], frameWidth: Int, frameHeight: Int) -> NSBitmapImageRep? {
+        let sheetHeight = frameHeight * frames.count
+
+        guard let spriteSheet = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: frameWidth,
+            pixelsHigh: sheetHeight,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: frameWidth * 4,
+            bitsPerPixel: 32
+        ) else {
+            return nil
+        }
+
+        NSGraphicsContext.saveGraphicsState()
+        guard let context = NSGraphicsContext(bitmapImageRep: spriteSheet) else {
+            NSGraphicsContext.restoreGraphicsState()
+            return nil
+        }
+        NSGraphicsContext.current = context
+
+        // Clear to transparent
+        NSColor.clear.setFill()
+        NSRect(x: 0, y: 0, width: frameWidth, height: sheetHeight).fill()
+
+        // Draw each frame
+        for (index, frame) in frames.enumerated() {
+            let sourceImage = NSImage(size: NSSize(width: frame.pixelsWide, height: frame.pixelsHigh))
+            sourceImage.addRepresentation(frame)
+
+            let yOffset = CGFloat(index * frameHeight)
+            let destRect = NSRect(x: 0, y: yOffset, width: CGFloat(frameWidth), height: CGFloat(frameHeight))
+            sourceImage.draw(in: destRect, from: .zero, operation: .copy, fraction: 1.0)
+        }
+
+        NSGraphicsContext.restoreGraphicsState()
+        return spriteSheet
+    }
+
+    /// Scale a GIF sprite sheet to standard cursor size
+    private func scaleGIFSpriteSheet(_ original: NSBitmapImageRep, frameCount: Int, originalFrameWidth: Int, originalFrameHeight: Int) -> NSBitmapImageRep? {
+        let targetSize = standardCursorSize
+
+        guard let newBitmap = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: targetSize,
+            pixelsHigh: targetSize * frameCount,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: targetSize * 4,
+            bitsPerPixel: 32
+        ) else {
+            return nil
+        }
+
+        let originalWidth = CGFloat(originalFrameWidth)
+        let originalHeight = CGFloat(originalFrameHeight)
+        let targetSizeF = CGFloat(targetSize)
+
+        let scale = min(targetSizeF / originalWidth, targetSizeF / originalHeight)
+        let scaledWidth = originalWidth * scale
+        let scaledHeight = originalHeight * scale
+
+        let offsetX = (targetSizeF - scaledWidth) / 2
+        let offsetY = (targetSizeF - scaledHeight) / 2
+
+        NSGraphicsContext.saveGraphicsState()
+        guard let context = NSGraphicsContext(bitmapImageRep: newBitmap) else {
+            NSGraphicsContext.restoreGraphicsState()
+            return nil
+        }
+        NSGraphicsContext.current = context
+
+        NSColor.clear.setFill()
+        NSRect(x: 0, y: 0, width: targetSize, height: targetSize * frameCount).fill()
+
+        let sourceImage = NSImage(size: NSSize(width: original.pixelsWide, height: original.pixelsHigh))
+        sourceImage.addRepresentation(original)
+
+        for frameIndex in 0..<frameCount {
+            let srcY = CGFloat(frameIndex) * originalHeight
+            let srcRect = NSRect(x: 0, y: srcY, width: originalWidth, height: originalHeight)
+
+            let dstY = CGFloat(frameIndex) * targetSizeF + offsetY
+            let dstRect = NSRect(x: offsetX, y: dstY, width: scaledWidth, height: scaledHeight)
+
+            sourceImage.draw(in: dstRect, from: srcRect, operation: .copy, fraction: 1.0)
+        }
+
+        NSGraphicsContext.restoreGraphicsState()
+        return newBitmap
     }
 
     /// Get original bitmap representation from image
