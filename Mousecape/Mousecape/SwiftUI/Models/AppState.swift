@@ -684,15 +684,15 @@ final class AppState: @unchecked Sendable {
         isLoading = true
         loadingMessage = LocalizationManager.shared.localized("Importing Windows cursors...")
 
-        do {
-            // Check for valid INF with [Scheme.Reg] section
-            if let infMapping = WindowsINFParser.findValidINF(in: folderURL) {
-                // Use INF-based import (position-based mapping)
-                await processWithINFMapping(folderURL: folderURL, infMapping: infMapping)
-            } else {
-                // Fallback to filename-based import
-                await processWithFilenameMapping(folderURL: folderURL)
-            }
+        // Check for valid INF with [Scheme.Reg] section
+        switch WindowsINFParser.findValidINF(in: folderURL) {
+        case .success(let infMapping):
+            // Use INF-based import (position-based mapping)
+            await processWithINFMapping(folderURL: folderURL, infMapping: infMapping)
+        case .failure(let error):
+            // Show INF parsing error and fallback to filename-based import
+            print("INF parsing failed: \(error.localizedDescription), using filename mapping")
+            await processWithFilenameMapping(folderURL: folderURL)
         }
     }
 

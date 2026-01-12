@@ -20,6 +20,30 @@ struct WindowsINFMapping {
     let cursorDir: String?
 }
 
+/// INF parsing error with detailed reason
+enum INFParseError: Error, LocalizedError {
+    case fileNotFound(String)
+    case encodingError(String)
+    case noSchemeRegSection
+    case noCursorPaths
+    case noValidCursors
+
+    var errorDescription: String? {
+        switch self {
+        case .fileNotFound(let path):
+            return "INF file not found: \(path)"
+        case .encodingError(let path):
+            return "Failed to read INF file (encoding error): \(path)"
+        case .noSchemeRegSection:
+            return "No [Scheme.Reg] section found in INF file"
+        case .noCursorPaths:
+            return "No cursor paths found in [Scheme.Reg]"
+        case .noValidCursors:
+            return "No valid cursor filenames could be resolved"
+        }
+    }
+}
+
 /// Parser for Windows cursor install.inf files
 struct WindowsINFParser {
 
@@ -47,31 +71,35 @@ struct WindowsINFParser {
 
     /// Parse an install.inf file
     /// - Parameter url: URL to the .inf file
-    /// - Returns: Parsed INF mapping, or nil if parsing failed
-    static func parse(url: URL) -> WindowsINFMapping? {
-        guard let content = try? String(contentsOf: url, encoding: .utf8) else {
-            // Try Windows codepage encoding
-            guard let content = try? String(contentsOf: url, encoding: .windowsCP1252) else {
-                return nil
-            }
-            return parseContent(content)
+    /// - Returns: Result with parsed INF mapping or error reason
+    static func parse(url: URL) -> Result<WindowsINFMapping, INFParseError> {
+        // Check if file exists
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return .failure(.fileNotFound(url.lastPathComponent))
         }
+
+        // Read file as ASCII, replacing invalid characters
+        guard let data = try? Data(contentsOf: url),
+              let content = String(data: data, encoding: .ascii) else {
+            return .failure(.encodingError(url.lastPathComponent))
+        }
+
         return parseContent(content)
     }
 
     /// Parse INF content string
-    private static func parseContent(_ content: String) -> WindowsINFMapping? {
+    private static func parseContent(_ content: String) -> Result<WindowsINFMapping, INFParseError> {
         let lines = content.components(separatedBy: .newlines)
 
         // Step 1: Parse [Scheme.Reg] section to get cursor paths
         guard let schemeRegLine = findSchemeRegLine(lines) else {
-            return nil
+            return .failure(.noSchemeRegSection)
         }
 
         // Step 2: Extract cursor paths from Scheme.Reg
         let cursorPaths = extractCursorPaths(from: schemeRegLine)
         guard !cursorPaths.isEmpty else {
-            return nil
+            return .failure(.noCursorPaths)
         }
 
         // Step 3: Parse [Strings] section (optional, for variable resolution)
@@ -83,15 +111,18 @@ struct WindowsINFParser {
             if let filename = resolveFilename(from: path, strings: strings) {
                 cursorFilesByPosition[position] = filename
             }
+            // Skip invalid paths silently
         }
 
-        guard !cursorFilesByPosition.isEmpty else { return nil }
+        guard !cursorFilesByPosition.isEmpty else {
+            return .failure(.noValidCursors)
+        }
 
-        return WindowsINFMapping(
+        return .success(WindowsINFMapping(
             cursorFilesByPosition: cursorFilesByPosition,
             schemeName: strings["scheme_name"],
             cursorDir: strings["cur_dir"]
-        )
+        ))
     }
 
     /// Find the HKCU,"Control Panel\Cursors\Schemes" line in [Scheme.Reg] section
@@ -230,8 +261,8 @@ struct WindowsINFParser {
     /// Find and parse a valid INF file in a folder
     /// Searches for all *.inf files and returns the first one with valid [Scheme.Reg]
     /// - Parameter folderURL: Folder to search in
-    /// - Returns: Parsed INF mapping if found, nil otherwise
-    static func findValidINF(in folderURL: URL) -> WindowsINFMapping? {
+    /// - Returns: Result with parsed INF mapping or last error encountered
+    static func findValidINF(in folderURL: URL) -> Result<WindowsINFMapping, INFParseError> {
         let fileManager = FileManager.default
 
         guard let contents = try? fileManager.contentsOfDirectory(
@@ -239,19 +270,27 @@ struct WindowsINFParser {
             includingPropertiesForKeys: nil,
             options: [.skipsHiddenFiles]
         ) else {
-            return nil
+            return .failure(.fileNotFound(folderURL.lastPathComponent))
         }
 
         // Find all .inf files
         let infFiles = contents.filter { $0.pathExtension.lowercased() == "inf" }
 
+        guard !infFiles.isEmpty else {
+            return .failure(.fileNotFound("*.inf"))
+        }
+
         // Try each INF file until we find a valid one
+        var lastError: INFParseError = .noSchemeRegSection
         for infURL in infFiles {
-            if let mapping = parse(url: infURL) {
-                return mapping
+            switch parse(url: infURL) {
+            case .success(let mapping):
+                return .success(mapping)
+            case .failure(let error):
+                lastError = error
             }
         }
 
-        return nil
+        return .failure(lastError)
     }
 }
