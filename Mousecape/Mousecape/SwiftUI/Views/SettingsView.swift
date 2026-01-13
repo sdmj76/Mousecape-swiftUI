@@ -222,6 +222,7 @@ struct AppearanceSettingsView: View {
 
 struct AdvancedSettingsView: View {
     @State private var showResetConfirmation = false
+    @State private var isExportingLogs = false
     @Environment(AppState.self) private var appState
     @Environment(LocalizationManager.self) private var localization
 
@@ -256,6 +257,43 @@ struct AdvancedSettingsView: View {
                     Text(localization.localized("This will reset all settings to their default values. This action cannot be undone."))
                 }
             }
+
+            #if DEBUG
+            Section("Debug") {
+                LabeledContent("Log Folder") {
+                    Text("~/Library/Logs/Mousecape")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                LabeledContent("Log Files") {
+                    let files = DebugLogger.getAllLogFiles()
+                    let size = DebugLogger.getTotalLogSize()
+                    Text("\(files.count) files, \(ByteCountFormatter.string(fromByteCount: size, countStyle: .file))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                HStack {
+                    Button("Open Log Folder") {
+                        NSWorkspace.shared.open(DebugLogger.logsDirectory)
+                    }
+
+                    Button("Export All Logs") {
+                        exportLogs()
+                    }
+                    .disabled(isExportingLogs)
+
+                    Button("Clear All Logs", role: .destructive) {
+                        DebugLogger.clearAllLogs()
+                    }
+                }
+
+                Text("Logs are automatically deleted after 24 hours. Logs contain debug information for troubleshooting cursor issues on macOS 26.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            #endif
 
             Section(localization.localized("About")) {
                 LabeledContent(localization.localized("Version")) {
@@ -307,6 +345,51 @@ struct AdvancedSettingsView: View {
         // Reset language to system default
         LocalizationManager.shared.currentLanguage = .system
     }
+
+    #if DEBUG
+    private func exportLogs() {
+        isExportingLogs = true
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let zipURL = DebugLogger.exportLogsAsZip() else {
+                DispatchQueue.main.async {
+                    isExportingLogs = false
+                }
+                return
+            }
+
+            DispatchQueue.main.async {
+                isExportingLogs = false
+
+                // Use NSSavePanel to let user choose save location
+                let savePanel = NSSavePanel()
+                savePanel.allowedContentTypes = [.zip]
+                savePanel.nameFieldStringValue = zipURL.lastPathComponent
+                savePanel.canCreateDirectories = true
+                savePanel.title = "Export Debug Logs"
+
+                if savePanel.runModal() == .OK, let destURL = savePanel.url {
+                    do {
+                        // Remove existing file if any
+                        try? FileManager.default.removeItem(at: destURL)
+                        try FileManager.default.copyItem(at: zipURL, to: destURL)
+
+                        // Clean up temp file
+                        try? FileManager.default.removeItem(at: zipURL)
+
+                        // Show in Finder
+                        NSWorkspace.shared.selectFile(destURL.path, inFileViewerRootedAtPath: "")
+                    } catch {
+                        debugLog("Failed to save logs: \(error.localizedDescription)")
+                    }
+                } else {
+                    // Clean up temp file if user cancelled
+                    try? FileManager.default.removeItem(at: zipURL)
+                }
+            }
+        }
+    }
+    #endif
 
     private func checkForUpdates() {
         // Open GitHub releases page for manual update checking

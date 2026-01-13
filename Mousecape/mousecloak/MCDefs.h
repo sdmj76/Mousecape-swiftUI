@@ -9,8 +9,16 @@
 #ifndef Mousecape_MCDefs_h
 #define Mousecape_MCDefs_h
 
-#define MMOut(format, ...) fprintf(stdout, format, ## __VA_ARGS__)
-#define MMLog(format, ...) MMOut(format "\n", ## __VA_ARGS__)
+#import "MCLogger.h"
+
+// In DEBUG mode, use file logging; in Release mode, use stdout only
+#ifdef DEBUG
+    #define MMOut(format, ...) MCLoggerWrite(format, ## __VA_ARGS__)
+    #define MMLog(format, ...) MCLoggerWrite(format, ## __VA_ARGS__)
+#else
+    #define MMOut(format, ...) fprintf(stdout, format, ## __VA_ARGS__)
+    #define MMLog(format, ...) MMOut(format "\n", ## __VA_ARGS__)
+#endif
 
 #import "CGSCursor.h"
 #import "CGSAccessibility.h"

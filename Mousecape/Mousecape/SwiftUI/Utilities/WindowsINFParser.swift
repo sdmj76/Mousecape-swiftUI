@@ -51,13 +51,19 @@ struct WindowsINFParser {
     /// - Parameter url: URL to the install.inf file
     /// - Returns: Parsed INF mapping, or nil if parsing failed
     static func parse(url: URL) -> WindowsINFMapping? {
+        debugLog("=== Parsing Windows INF ===")
+        debugLog("File: \(url.lastPathComponent)")
+
         guard let content = try? String(contentsOf: url, encoding: .utf8) else {
             // Try Windows codepage encoding
             guard let content = try? String(contentsOf: url, encoding: .windowsCP1252) else {
+                debugLog("Error: Failed to read INF file")
                 return nil
             }
+            debugLog("Read with Windows CP1252 encoding")
             return parseContent(content)
         }
+        debugLog("Read with UTF-8 encoding")
         return parseContent(content)
     }
 
@@ -66,6 +72,8 @@ struct WindowsINFParser {
         var cursorFiles: [String: String] = [:]
         var schemeName: String?
         var cursorDir: String?
+
+        debugLog("Parsing INF content (\(content.count) chars)")
 
         // Find [Strings] section
         let lines = content.components(separatedBy: .newlines)
@@ -98,7 +106,18 @@ struct WindowsINFParser {
             }
         }
 
-        guard !cursorFiles.isEmpty else { return nil }
+        guard !cursorFiles.isEmpty else {
+            debugLog("No cursor files found in INF")
+            return nil
+        }
+
+        debugLog("INF parse result: \(cursorFiles.count) cursor mappings")
+        for (key, filename) in cursorFiles.sorted(by: { $0.key < $1.key }) {
+            debugLog("  \(key) -> \(filename)")
+        }
+        if let scheme = schemeName {
+            debugLog("Scheme name: \(scheme)")
+        }
 
         return WindowsINFMapping(
             cursorFiles: cursorFiles,

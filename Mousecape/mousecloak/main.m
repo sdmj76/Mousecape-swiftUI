@@ -23,6 +23,15 @@
 
 int main(int argc, char * argv[]) {
     @autoreleasepool {
+#ifdef DEBUG
+        MCLoggerInit();
+        MMLog("=== mousecloak CLI Started ===");
+        MMLog("Arguments: %d", argc);
+        for (int i = 0; i < argc; i++) {
+            MMLog("  argv[%d]: %s", i, argv[i]);
+        }
+#endif
+
         GBSettings *settings = [GBSettings settingsWithName:@"mousecape" parent:nil];
         
         GBOptionsHelper *options = [[GBOptionsHelper alloc] init];

@@ -54,20 +54,30 @@ NSString *appliedCapePathForUser(NSString *user) {
 }
 
 static void UserSpaceChanged(SCDynamicStoreRef	store, CFArrayRef changedKeys, void *info) {
+    MMLog("========================================");
+    MMLog("=== USER SPACE CHANGED EVENT ===");
+    MMLog("========================================");
+
     CFStringRef currentConsoleUser = SCDynamicStoreCopyConsoleUser(store, NULL, NULL);
 
-    MMLog("Current user is %s", [(__bridge NSString *)currentConsoleUser UTF8String]);
+    MMLog("Console user: %s", currentConsoleUser ? [(__bridge NSString *)currentConsoleUser UTF8String] : "(null)");
+    MMLog("Changed keys count: %ld", CFArrayGetCount(changedKeys));
 
     if (!currentConsoleUser || CFEqual(currentConsoleUser, CFSTR("loginwindow"))) {
+        MMLog("Skipping - loginwindow or no user");
+        if (currentConsoleUser) CFRelease(currentConsoleUser);
         return;
     }
 
     NSString *appliedPath = appliedCapePathForUser((__bridge NSString *)currentConsoleUser);
     MMLog(BOLD GREEN "User Space Changed to %s, applying cape..." RESET, [(__bridge NSString *)currentConsoleUser UTF8String]);
+    MMLog("Cape path: %s", appliedPath ? appliedPath.UTF8String : "(none)");
 
     // Only attempt to apply if there's a valid cape path
     if (appliedPath) {
-        if (!applyCapeAtPath(appliedPath)) {
+        BOOL success = applyCapeAtPath(appliedPath);
+        MMLog("Apply result: %s", success ? "SUCCESS" : "FAILED");
+        if (!success) {
             MMLog(BOLD RED "Application of cape failed" RESET);
         }
     } else {
@@ -75,6 +85,7 @@ static void UserSpaceChanged(SCDynamicStoreRef	store, CFArrayRef changedKeys, vo
     }
 
     setCursorScale(defaultCursorScale());
+    MMLog("Cursor scale applied");
 
     CFRelease(currentConsoleUser);
 }
@@ -82,55 +93,108 @@ static void UserSpaceChanged(SCDynamicStoreRef	store, CFArrayRef changedKeys, vo
 void reconfigurationCallback(CGDirectDisplayID display,
     	CGDisplayChangeSummaryFlags flags,
     	void *userInfo) {
-    MMLog("Reconfigure user space");
+    MMLog("========================================");
+    MMLog("=== DISPLAY RECONFIGURATION EVENT ===");
+    MMLog("========================================");
+    MMLog("Display ID: %u", display);
+    MMLog("Flags: 0x%x", flags);
+    MMLog("  kCGDisplayBeginConfigurationFlag: %s", (flags & kCGDisplayBeginConfigurationFlag) ? "YES" : "NO");
+    MMLog("  kCGDisplaySetMainFlag: %s", (flags & kCGDisplaySetMainFlag) ? "YES" : "NO");
+    MMLog("  kCGDisplayAddFlag: %s", (flags & kCGDisplayAddFlag) ? "YES" : "NO");
+    MMLog("  kCGDisplayRemoveFlag: %s", (flags & kCGDisplayRemoveFlag) ? "YES" : "NO");
+
     NSString *capePath = appliedCapePathForUser(NSUserName());
+    MMLog("Cape path: %s", capePath ? capePath.UTF8String : "(none)");
     if (capePath) {
-        applyCapeAtPath(capePath);
+        BOOL success = applyCapeAtPath(capePath);
+        MMLog("Apply result: %s", success ? "SUCCESS" : "FAILED");
     }
     float scale;
     CGSGetCursorScale(CGSMainConnectionID(), &scale);
+    MMLog("Current cursor scale: %.2f", scale);
     CGSSetCursorScale(CGSMainConnectionID(), scale + .3);
     CGSSetCursorScale(CGSMainConnectionID(), scale);
+    MMLog("Cursor scale refreshed");
 }
 
 
 void listener(void) {
+#ifdef DEBUG
+    MCLoggerInit();
+#endif
+
+    MMLog("========================================");
+    MMLog("=== MOUSECAPE HELPER DAEMON STARTED ===");
+    MMLog("========================================");
+
+    NSOperatingSystemVersion ver = [[NSProcessInfo processInfo] operatingSystemVersion];
+    MMLog("macOS version: %ld.%ld.%ld",
+          (long)ver.majorVersion, (long)ver.minorVersion, (long)ver.patchVersion);
+    MMLog("Process: %s (PID: %d)",
+          [[[NSProcessInfo processInfo] processName] UTF8String],
+          [[NSProcessInfo processInfo] processIdentifier]);
+    MMLog("User: %s", NSUserName().UTF8String);
+    MMLog("Home: %s", NSHomeDirectory().UTF8String);
+
+    // Log environment variables
+    MMLog("--- Environment Variables ---");
+    NSDictionary *env = [[NSProcessInfo processInfo] environment];
+    for (NSString *key in @[@"USER", @"HOME", @"DISPLAY", @"XPC_SERVICE_NAME"]) {
+        MMLog("  %s = %s", key.UTF8String, [env[key] UTF8String] ?: "(null)");
+    }
+
     SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, CFSTR("com.apple.dts.ConsoleUser"), UserSpaceChanged, NULL);
     assert(store != NULL);
-    
+
     CFStringRef key = SCDynamicStoreKeyCreateConsoleUser(NULL);
     assert(key != NULL);
-    
+
     CFArrayRef keys = CFArrayCreate(NULL, (const void **)&key, 1, &kCFTypeArrayCallBacks);
     assert(keys != NULL);
-    
+
     Boolean success = SCDynamicStoreSetNotificationKeys(store, keys, NULL);
     assert(success);
-    
+
     NSApplicationLoad();
     CGDisplayRegisterReconfigurationCallback(reconfigurationCallback, NULL);
     MMLog(BOLD CYAN "Listening for Display changes" RESET);
-    
+
     CFRunLoopSourceRef rls = SCDynamicStoreCreateRunLoopSource(NULL, store, 0);
     assert(rls != NULL);
     MMLog(BOLD CYAN "Listening for User changes" RESET);
-    
+
+    // Check CGS Connection
+    MMLog("--- Checking CGS Connection ---");
+    CGSConnectionID cid = CGSMainConnectionID();
+    MMLog("CGSMainConnectionID: %d", cid);
+
     // Apply the cape for the user on load (if configured)
+    MMLog("--- Initial Cape Check ---");
     NSString *initialCapePath = appliedCapePathForUser(NSUserName());
+    MMLog("Cape path: %s", initialCapePath ? initialCapePath.UTF8String : "(none)");
     if (initialCapePath) {
-        applyCapeAtPath(initialCapePath);
+        MMLog("--- Applying initial cape ---");
+        BOOL applySuccess = applyCapeAtPath(initialCapePath);
+        MMLog("Initial apply result: %s", applySuccess ? "SUCCESS" : "FAILED");
     } else {
         MMLog("No cape configured - running in standby mode");
     }
     setCursorScale(defaultCursorScale());
-    
+    MMLog("Initial cursor scale applied");
+
     CFRunLoopAddSource(CFRunLoopGetCurrent(), rls, kCFRunLoopDefaultMode);
+    MMLog("Entering run loop...");
     CFRunLoopRun();
 
     // Cleanup
+    MMLog("Exiting run loop, cleaning up...");
     CFRunLoopSourceInvalidate(rls);
     CFRelease(rls);
     CFRelease(keys);
     CFRelease(key);
     CFRelease(store);
+
+#ifdef DEBUG
+    MCLoggerClose();
+#endif
 }

@@ -267,8 +267,15 @@ final class AppState: @unchecked Sendable {
 
     /// Apply a cape
     func applyCape(_ cape: CursorLibrary) {
+        debugLog("=== Applying Cape ===")
+        debugLog("Cape: \(cape.name) (\(cape.identifier))")
+        debugLog("Cursors count: \(cape.cursors.count)")
+
         libraryController?.applyCape(cape.underlyingLibrary)
         appliedCape = cape
+
+        debugLog("Apply completed, saving preferences...")
+
         // Save identifier for "Apply Last Cape on Launch" feature
         UserDefaults.standard.set(cape.identifier, forKey: "lastAppliedCapeIdentifier")
         // Also write MCAppliedCursor for mousecloakhelper (ObjC helper daemon)
@@ -289,8 +296,13 @@ final class AppState: @unchecked Sendable {
 
     /// Reset to default system cursors
     func resetToDefault() {
+        debugLog("=== Resetting to Default Cursors ===")
+
         libraryController?.restoreCape()
         appliedCape = nil
+
+        debugLog("Reset completed, clearing preferences...")
+
         // Clear last applied cape identifier
         UserDefaults.standard.removeObject(forKey: "lastAppliedCapeIdentifier")
         // Also clear MCAppliedCursor for mousecloakhelper

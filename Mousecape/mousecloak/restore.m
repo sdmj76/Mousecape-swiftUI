@@ -20,24 +20,34 @@ NSString *restoreStringForIdentifier(NSString *identifier) {
 }
 
 void restoreCursorForIdentifier(NSString *ident) {
+    MMLog("  Restoring: %s", ident.UTF8String);
     bool registered = false;
     MCIsCursorRegistered(CGSMainConnectionID(), (char *)ident.UTF8String, &registered);
 
     NSString *restoreIdent = restoreStringForIdentifier(ident);
     NSDictionary *cape = capeWithIdentifier(ident);
-    
-    MMLog("Restoring cursor %s from %s", restoreIdent.UTF8String, ident.UTF8String);
+
+    MMLog("    Restore target: %s, registered: %s, cape: %s",
+          restoreIdent.UTF8String,
+          registered ? "YES" : "NO",
+          cape ? "YES" : "NO");
+
     if (cape && registered) {
-        applyCapeForIdentifier(cape, restoreIdent, YES);
+        BOOL success = applyCapeForIdentifier(cape, restoreIdent, YES);
+        MMLog("    Restore result: %s", success ? "SUCCESS" : "FAILED");
+    } else {
+        MMLog("    Skipped - no cape or not registered");
     }
 
     CGSRemoveRegisteredCursor(CGSMainConnectionID(), (char *)ident.UTF8String, false);
+    MMLog("    Removed backup cursor");
 }
 
 void resetAllCursors() {
-    MMLog("Restoring cursors...");
-    
+    MMLog("=== resetAllCursors ===");
+
     // Restore main cursors first
+    MMLog("--- Restoring default cursors ---");
     NSUInteger i = 0;
     NSString *key = nil;
     while ((key = defaultCursors[i]) != nil) {
@@ -46,27 +56,34 @@ void resetAllCursors() {
     }
 
     // Also restore any Arrow synonyms that may have been backed up
+    MMLog("--- Restoring Arrow synonyms ---");
     NSArray<NSString *> *synonyms = MCArrowSynonyms();
     for (NSString *name in synonyms) {
         restoreCursorForIdentifier(backupStringForIdentifier(name));
     }
 
     // And also restore I-beam synonyms
+    MMLog("--- Restoring IBeam synonyms ---");
     NSArray<NSString *> *ibeamSynonyms = MCIBeamSynonyms();
     for (NSString *name in ibeamSynonyms) {
         restoreCursorForIdentifier(backupStringForIdentifier(name));
     }
 
     // Restore auxiliary/core cursors
-    MMLog("Restoring core cursors...");
-    if (CoreCursorUnregisterAll(CGSMainConnectionID()) == 0) {
+    MMLog("--- Restoring core cursors ---");
+    CGError err = CoreCursorUnregisterAll(CGSMainConnectionID());
+    MMLog("CoreCursorUnregisterAll result: %d", err);
+
+    if (err == 0) {
         MCSetDefault(NULL, MCPreferencesAppliedCursorKey);
-        
+
         for (int x = 0; x < 45; x++) {
             CoreCursorSet(CGSMainConnectionID(), x);
         }
-        
+
         MMLog(BOLD GREEN "Successfully restored all cursors." RESET);
-    } else
+    } else {
         MMLog(BOLD RED "Received an error while restoring core cursors." RESET);
+    }
+    MMLog("=== resetAllCursors complete ===");
 }

@@ -164,25 +164,39 @@ struct WindowsCursorParser {
 
     /// Parse a cursor file from URL
     static func parse(fileURL: URL) throws -> WindowsCursorParseResult {
+        debugLog("=== Parsing Windows Cursor ===")
+        debugLog("File: \(fileURL.lastPathComponent)")
+
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            debugLog("Error: File not found")
             throw WindowsCursorParserError.fileNotFound
         }
 
         let data = try Data(contentsOf: fileURL)
         let ext = fileURL.pathExtension.lowercased()
 
+        debugLog("Size: \(data.count) bytes, Extension: \(ext)")
+
+        let result: WindowsCursorParseResult
         switch ext {
         case "cur":
-            return try parseCUR(data: data)
+            result = try parseCUR(data: data)
         case "ani":
-            return try parseANI(data: data)
+            result = try parseANI(data: data)
         default:
+            debugLog("Error: Unknown extension")
             throw WindowsCursorParserError.unsupportedFormat("Unknown extension: \(ext)")
         }
+
+        debugLog("Parse result: \(result.frameCount) frames, \(result.width)x\(result.height), hotspot: (\(result.hotspotX), \(result.hotspotY))")
+        return result
     }
 
     /// Parse a folder of cursor files
     static func parseFolder(folderURL: URL) throws -> [WindowsCursorParseResult] {
+        debugLog("=== Parsing Windows Cursor Folder ===")
+        debugLog("Folder: \(folderURL.path)")
+
         let fileManager = FileManager.default
         guard let enumerator = fileManager.enumerator(at: folderURL, includingPropertiesForKeys: nil) else {
             throw WindowsCursorParserError.invalidFormat("Cannot enumerate folder")
