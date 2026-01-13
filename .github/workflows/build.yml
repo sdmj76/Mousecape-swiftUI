@@ -14,14 +14,6 @@ on:
 
   # 手动触发
   workflow_dispatch:
-    inputs:
-      configuration:
-        description: 'Build configuration'
-        default: 'Release'
-        type: choice
-        options:
-          - Debug
-          - Release
 
 # 并发控制
 concurrency:
@@ -31,6 +23,9 @@ concurrency:
 jobs:
   build:
     runs-on: macos-15
+    strategy:
+      matrix:
+        configuration: [Release, Debug]
 
     steps:
       - name: Checkout
@@ -44,11 +39,11 @@ jobs:
           sudo xcode-select -s /Applications/Xcode_26.1.app
           xcodebuild -version
 
-      - name: Build Mousecape
+      - name: Build Mousecape (${{ matrix.configuration }})
         run: |
           xcodebuild -project Mousecape/Mousecape.xcodeproj \
             -scheme Mousecape \
-            -configuration ${{ github.event.inputs.configuration || 'Release' }} \
+            -configuration ${{ matrix.configuration }} \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=YES \
@@ -60,10 +55,18 @@ jobs:
           BUILD_DIR=$(find ~/Library/Developer/Xcode/DerivedData -name "Mousecape.app" -type d | head -1)
           if [ -n "$BUILD_DIR" ]; then
             echo "Found app at: $BUILD_DIR"
-            # 使用 ditto 创建 zip 保持 .app 结构
             mkdir -p /tmp/artifact
-            ditto -c -k --keepParent "$BUILD_DIR" /tmp/artifact/Mousecape.app.zip
-            echo "Created zip: /tmp/artifact/Mousecape.app.zip"
+
+            # 根据配置决定文件名后缀
+            if [ "${{ matrix.configuration }}" == "Debug" ]; then
+              FILENAME="Mousecape_debug.app.zip"
+            else
+              FILENAME="Mousecape.app.zip"
+            fi
+
+            # 使用 ditto 创建 zip 保持 .app 结构
+            ditto -c -k --keepParent "$BUILD_DIR" "/tmp/artifact/${FILENAME}"
+            echo "Created zip: /tmp/artifact/${FILENAME}"
             ls -lh /tmp/artifact/
           else
             echo "Error: Mousecape.app not found"
@@ -74,6 +77,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Mousecape-${{ github.sha }}
-          path: /tmp/artifact/Mousecape.app.zip
+          name: Mousecape-${{ matrix.configuration }}-${{ github.sha }}
+          path: /tmp/artifact/*.zip
           retention-days: 7
