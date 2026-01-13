@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import ServiceManagement
 
 @main
 struct MousecapeApp: App {
@@ -84,6 +85,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Check and repair Helper if needed (fixes error 78 after app update)
+        checkAndRepairHelper()
+
         // Apply last cape on launch if enabled
         let applyLastCapeOnLaunch = UserDefaults.standard.bool(forKey: "applyLastCapeOnLaunch")
         // Default to true if never set
@@ -102,6 +106,119 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
+    }
+
+    /// Check if Helper is in a bad state (error 78) and repair it
+    /// This fixes the issue when app is updated while Helper is still running
+    private func checkAndRepairHelper() {
+        let helperIdentifier = "com.sdmj76.mousecloakhelper"
+        let service = SMAppService.loginItem(identifier: helperIdentifier)
+
+        // Only check if Helper was previously enabled
+        guard service.status == .enabled else {
+            helperLog("Helper not enabled, skipping health check")
+            return
+        }
+
+        helperLog("=== Helper Health Check ===")
+
+        // Check launchd status
+        let launchdStatus = checkHelperLaunchdStatus(helperIdentifier)
+        helperLog("launchd status: \(launchdStatus)")
+
+        // If Helper is running with exit code 78, it needs repair
+        if launchdStatus.contains("exit code: 78") || launchdStatus.contains("Not running") {
+            helperLog("Helper in bad state, attempting repair...")
+
+            // Force cleanup and re-register
+            forceCleanupHelper(helperIdentifier)
+
+            do {
+                // Unregister first
+                try? service.unregister()
+                helperLog("Unregistered old Helper")
+
+                // Small delay to let launchd settle
+                Thread.sleep(forTimeInterval: 0.5)
+
+                // Re-register
+                try service.register()
+                helperLog("Re-registered Helper")
+
+                // Verify
+                let newStatus = checkHelperLaunchdStatus(helperIdentifier)
+                helperLog("After repair - launchd status: \(newStatus)")
+
+                if newStatus.contains("Running") {
+                    helperLog("Helper repair successful!")
+                } else {
+                    helperLog("Helper repair may have failed, status: \(newStatus)")
+                }
+            } catch {
+                helperLog("Helper repair failed: \(error.localizedDescription)")
+            }
+        } else if launchdStatus.contains("Running") {
+            helperLog("Helper is healthy")
+        } else {
+            helperLog("Helper status unknown: \(launchdStatus)")
+        }
+
+        helperLog("=== End Health Check ===")
+    }
+
+    private func forceCleanupHelper(_ identifier: String) {
+        let uid = getuid()
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        process.arguments = ["bootout", "gui/\(uid)/\(identifier)"]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+
+        try? process.run()
+        process.waitUntilExit()
+        helperLog("launchctl bootout exit code: \(process.terminationStatus)")
+    }
+
+    private func checkHelperLaunchdStatus(_ identifier: String) -> String {
+        let process = Process()
+        let pipe = Pipe()
+        process.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        process.arguments = ["list"]
+        process.standardOutput = pipe
+        process.standardError = FileHandle.nullDevice
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let output = String(data: data, encoding: .utf8) ?? ""
+
+            for line in output.components(separatedBy: "\n") {
+                if line.contains(identifier) {
+                    let parts = line.split(separator: "\t").map(String.init)
+                    if parts.count >= 3 {
+                        let pid = parts[0]
+                        let exitCode = parts[1]
+                        if pid == "-" {
+                            return "Not running (exit code: \(exitCode))"
+                        } else {
+                            return "Running (PID: \(pid), exit code: \(exitCode))"
+                        }
+                    }
+                    return line
+                }
+            }
+            return "Not found in launchctl list"
+        } catch {
+            return "Check failed: \(error.localizedDescription)"
+        }
+    }
+
+    private func helperLog(_ message: String) {
+        #if DEBUG
+        DebugLogger.shared.log(message, file: "HelperHealthCheck", line: 0)
+        #endif
     }
 
     // Quit app when last window is closed
