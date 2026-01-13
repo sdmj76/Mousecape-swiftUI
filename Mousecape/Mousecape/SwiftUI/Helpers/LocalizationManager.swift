@@ -168,6 +168,18 @@ private let localizationStrings: [AppLanguage: [String: String]] = [
         "OK": "OK",
         "The Mousecape helper was successfully installed.": "The Mousecape helper was successfully installed.",
         "The Mousecape helper was successfully uninstalled.": "The Mousecape helper was successfully uninstalled.",
+        "Approval Required": "Approval Required",
+        "Please approve Mousecape in System Settings > General > Login Items to enable the helper.": "Please approve Mousecape in System Settings > General > Login Items to enable the helper.",
+        "Warning": "Warning",
+        "Helper registered but may not be running. Please restart the app or reinstall the helper.": "Helper registered but may not be running. Please restart the app or reinstall the helper.",
+
+        // Debug Settings
+        "Log Folder": "Log Folder",
+        "Log Files": "Log Files",
+        "Open Log Folder": "Open Log Folder",
+        "Export All Logs": "Export All Logs",
+        "Clear All Logs": "Clear All Logs",
+        "Logs are automatically deleted after 24 hours. Logs contain debug information for troubleshooting cursor issues.": "Logs are automatically deleted after 24 hours. Logs contain debug information for troubleshooting cursor issues.",
 
         // Additional UI strings
         "Unsaved Changes": "Unsaved Changes",
@@ -335,6 +347,18 @@ private let localizationStrings: [AppLanguage: [String: String]] = [
         "OK": "确定",
         "The Mousecape helper was successfully installed.": "Mousecape辅助程序已成功安装。",
         "The Mousecape helper was successfully uninstalled.": "Mousecape辅助程序已成功卸载。",
+        "Approval Required": "需要批准",
+        "Please approve Mousecape in System Settings > General > Login Items to enable the helper.": "请在系统设置 > 通用 > 登录项中批准 Mousecape 以启用辅助程序。",
+        "Warning": "警告",
+        "Helper registered but may not be running. Please restart the app or reinstall the helper.": "辅助程序已注册但可能未运行。请重启应用或重新安装辅助程序。",
+
+        // Debug Settings
+        "Log Folder": "日志文件夹",
+        "Log Files": "日志文件",
+        "Open Log Folder": "打开日志文件夹",
+        "Export All Logs": "导出所有日志",
+        "Clear All Logs": "清空所有日志",
+        "Logs are automatically deleted after 24 hours. Logs contain debug information for troubleshooting cursor issues.": "日志会在24小时后自动删除。日志包含用于排查光标问题的调试信息。",
 
         // Additional UI strings
         "Unsaved Changes": "未保存的更改",

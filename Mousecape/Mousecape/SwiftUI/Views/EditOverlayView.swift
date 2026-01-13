@@ -1512,14 +1512,36 @@ struct HelperToolSettingsView: View {
                 helperLog("Calling SMAppService.register()...")
                 try service.register()
 
-                // Check actual launchd status after registration
-                let launchdStatus = checkLaunchdStatus()
-                helperLog("After register - SMAppService status: \(describeServiceStatus(service.status))")
-                helperLog("After register - launchd: \(launchdStatus)")
+                // Check status after registration
+                let newStatus = service.status
+                helperLog("After register - SMAppService status: \(describeServiceStatus(newStatus))")
 
-                isHelperInstalled = true
-                alertTitle = localization.localized("Success")
-                alertMessage = localization.localized("The Mousecape helper was successfully installed.")
+                // Handle requiresApproval status (error -9)
+                if newStatus == .requiresApproval {
+                    helperLog("Helper requires user approval in System Settings")
+                    isHelperInstalled = false
+                    alertTitle = localization.localized("Approval Required")
+                    alertMessage = localization.localized("Please approve Mousecape in System Settings > General > Login Items to enable the helper.")
+                } else {
+                    // Check actual launchd status
+                    let launchdStatus = checkLaunchdStatus()
+                    helperLog("After register - launchd: \(launchdStatus)")
+
+                    // If launchd shows error 78, try to repair
+                    if launchdStatus.contains("exit code: 78") || launchdStatus.contains("Not running") {
+                        helperLog("Helper registered but not running, attempting repair...")
+                        repairHelperAfterApproval(service: service)
+                    }
+
+                    isHelperInstalled = (newStatus == .enabled)
+                    if isHelperInstalled {
+                        alertTitle = localization.localized("Success")
+                        alertMessage = localization.localized("The Mousecape helper was successfully installed.")
+                    } else {
+                        alertTitle = localization.localized("Warning")
+                        alertMessage = localization.localized("Helper registered but may not be running. Please restart the app or reinstall the helper.")
+                    }
+                }
             } else {
                 // First try launchctl bootout to fully remove from launchd
                 forceCleanupLaunchdState()
@@ -1537,12 +1559,48 @@ struct HelperToolSettingsView: View {
         } catch {
             helperLog("ERROR: \(error.localizedDescription)")
             helperLog("Error details: \(error)")
-            // Log additional diagnostic info on failure
-            logDiagnosticInfo()
-            alertTitle = localization.localized("Error")
-            alertMessage = error.localizedDescription
+
+            // Check if this is actually a requiresApproval situation
+            if service.status == .requiresApproval {
+                helperLog("Status is requiresApproval despite error")
+                isHelperInstalled = false
+                alertTitle = localization.localized("Approval Required")
+                alertMessage = localization.localized("Please approve Mousecape in System Settings > General > Login Items to enable the helper.")
+            } else {
+                // Log additional diagnostic info on failure
+                logDiagnosticInfo()
+                alertTitle = localization.localized("Error")
+                alertMessage = error.localizedDescription
+            }
         }
         showInstallAlert = true
+    }
+
+    /// Attempt to repair Helper after user approval
+    private func repairHelperAfterApproval(service: SMAppService) {
+        helperLog("--- Repair After Approval ---")
+
+        // Force cleanup
+        forceCleanupLaunchdState()
+
+        // Wait a moment for launchd to settle
+        Thread.sleep(forTimeInterval: 0.3)
+
+        // Try to unregister and re-register
+        do {
+            try? service.unregister()
+            helperLog("Unregistered for repair")
+
+            Thread.sleep(forTimeInterval: 0.3)
+
+            try service.register()
+            helperLog("Re-registered for repair")
+
+            let finalStatus = checkLaunchdStatus()
+            helperLog("After repair - launchd: \(finalStatus)")
+        } catch {
+            helperLog("Repair failed: \(error.localizedDescription)")
+        }
     }
 
     /// Log diagnostic information to help debug error 78

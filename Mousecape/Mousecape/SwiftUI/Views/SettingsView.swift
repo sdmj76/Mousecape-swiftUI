@@ -259,14 +259,14 @@ struct AdvancedSettingsView: View {
             }
 
             #if DEBUG
-            Section("Debug") {
-                LabeledContent("Log Folder") {
+            Section(localization.localized("Debug")) {
+                LabeledContent(localization.localized("Log Folder")) {
                     Text("~/Library/Logs/Mousecape")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
-                LabeledContent("Log Files") {
+                LabeledContent(localization.localized("Log Files")) {
                     let files = DebugLogger.getAllLogFiles()
                     let size = DebugLogger.getTotalLogSize()
                     Text("\(files.count) files, \(ByteCountFormatter.string(fromByteCount: size, countStyle: .file))")
@@ -275,21 +275,21 @@ struct AdvancedSettingsView: View {
                 }
 
                 HStack {
-                    Button("Open Log Folder") {
+                    Button(localization.localized("Open Log Folder")) {
                         NSWorkspace.shared.open(DebugLogger.logsDirectory)
                     }
 
-                    Button("Export All Logs") {
+                    Button(localization.localized("Export All Logs")) {
                         exportLogs()
                     }
                     .disabled(isExportingLogs)
 
-                    Button("Clear All Logs", role: .destructive) {
+                    Button(localization.localized("Clear All Logs"), role: .destructive) {
                         DebugLogger.clearAllLogs()
                     }
                 }
 
-                Text("Logs are automatically deleted after 24 hours. Logs contain debug information for troubleshooting cursor issues on macOS 26.")
+                Text(localization.localized("Logs are automatically deleted after 24 hours. Logs contain debug information for troubleshooting cursor issues."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
