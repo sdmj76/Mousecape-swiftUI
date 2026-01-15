@@ -158,6 +158,81 @@ Windows 光标主题通过 `[Scheme.Reg]` 段定义光标位置顺序（固定 0
 - `%10%\Cursors\%pointer%` - 从 `[Strings]` 段查找变量对应的文件名
 - `%10%\Cursors\Normal.ani` - 直接使用文件名
 
+### 动画光标帧数限制与速度计算
+
+**系统限制：** macOS 光标动画最大支持 **24 帧**。导入超过 24 帧的动画时会自动抽帧。
+
+#### GIF 动画导入
+
+**帧数限制逻辑** ([EditOverlayView.swift:1021-1144](Mousecape/Mousecape/SwiftUI/Views/EditOverlayView.swift#L1021-L1144)):
+```swift
+let maxFrameCount = 24
+if frames.count > maxFrameCount {
+    let downsampledFrames = downsampleFrames(frames, targetCount: maxFrameCount)
+    frames = downsampledFrames
+    // 调整总时长以保持动画播放速度一致
+    totalDuration *= Double(originalFrameCount) / Double(maxFrameCount)
+}
+```
+
+**速度计算：**
+1. 从 GIF 属性读取帧延迟：`kCGImagePropertyGIFDelayTime` 或 `kCGImagePropertyGIFUnclampedDelayTime`
+2. 默认延迟：0.1 秒（100ms）
+3. FPS 计算：`fps = 1 / frameDuration`
+
+**示例：** 32 帧 GIF，每帧 0.1 秒
+- 抽帧后：24 帧
+- 调整后帧时长：`0.1 × (32/24) = 0.133 秒`
+- 最终 FPS：`1 / 0.133 ≈ 7.5`
+
+#### ANI 动画导入
+
+**帧数限制逻辑** ([WindowsCursorConverter.swift:163-211](Mousecape/Mousecape/SwiftUI/Utilities/WindowsCursorConverter.swift#L163-L211)):
+```swift
+if parseResult.frameCount > maxFrameCount {
+    // 抽帧处理 sprite sheet
+    guard let downsampledData = downsampleSpriteSheet(...) else { ... }
+
+    // 调整帧时长以保持动画播放速度一致
+    let adjustedDuration = parseResult.frameDuration *
+        (Double(parseResult.frameCount) / Double(maxFrameCount))
+}
+```
+
+**速度计算：** ([WindowsCursorParser.swift:356-363](Mousecape/Mousecape/SwiftUI/Utilities/WindowsCursorParser.swift#L356-L363))
+1. 从 ANI 头部读取 `displayRate` 或 `rate` chunk
+2. Jiffies 转换：`frameDuration = rate / 60.0`（1 jiffy = 1/60 秒）
+3. FPS 计算：`fps = 1 / adjustedDuration`
+
+**示例：** 32 帧 ANI，displayRate = 10（每帧 10 jiffys）
+- 原始帧时长：`10 / 60 = 0.167 秒`
+- 抽帧后帧时长：`0.167 × (32/24) = 0.222 秒`
+- 最终 FPS：`1 / 0.222 ≈ 4.5`
+
+#### 抽帧策略
+
+**均匀采样算法** ([EditOverlayView.swift:1191-1208](Mousecape/Mousecape/SwiftUI/Views/EditOverlayView.swift#L1191-L1208))：
+```swift
+private func downsampleFrames(_ frames: [NSImage], targetCount: Int) -> [NSImage] {
+    var result: [NSImage] = []
+    let step = Double(frames.count - 1) / Double(targetCount - 1)
+
+    for i in 0..<targetCount {
+        let index = Int(round(Double(i) * step))
+        result.append(frames[index])
+    }
+    return result
+}
+```
+
+保持首尾帧，中间均匀采样，确保动画流畅性。
+
+#### 时长保持原则
+
+抽帧后的动画播放速度与原始动画保持一致：
+- **总时长不变**，帧数减少 → 每帧显示时间延长
+- 公式：`新帧时长 = 原帧时长 × (原帧数 / 新帧数)`
+
 ## 外部依赖
 
 - **GBCli**（mousecloak/vendor/）- 命令行参数解析

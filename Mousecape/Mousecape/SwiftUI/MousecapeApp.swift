@@ -228,7 +228,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // Close ObjC logging system on exit
     func applicationWillTerminate(_ notification: Notification) {
+        #if DEBUG
         MCLoggerClose()
+        #endif
     }
 }
 
