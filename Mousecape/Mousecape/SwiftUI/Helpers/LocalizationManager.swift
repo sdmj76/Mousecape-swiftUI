@@ -220,7 +220,20 @@ private let localizationStrings: [AppLanguage: [String: String]] = [
         "cursor(s) from": "cursor(s) from",
         "file(s).": "file(s).",
         "Failed to access library directory.": "Failed to access library directory.",
-        "Failed to import Windows cursors:": "Failed to import Windows cursors:"
+        "Failed to import Windows cursors:": "Failed to import Windows cursors:",
+
+        // Cape Validation Errors
+        "Cape validation failed": "Cape validation failed",
+        "This cape does not meet system requirements and cannot be imported.": "This cape does not meet system requirements and cannot be imported.",
+        "Frame count issues:": "Frame count issues:",
+        "%@ has %lu frames (maximum: %lu)": "%@ has %lu frames (maximum: %lu)",
+        "Hotspot position issues:": "Hotspot position issues:",
+        "X coordinate %.1f is negative": "X coordinate %.1f is negative",
+        "X coordinate %.1f exceeds width %.1f": "X coordinate %.1f exceeds width %.1f",
+        "Y coordinate %.1f is negative": "Y coordinate %.1f is negative",
+        "Y coordinate %.1f exceeds height %.1f": "Y coordinate %.1f exceeds height %.1f",
+        "Import failed": "Import failed",
+        "Unable to read the cape file.": "Unable to read the cape file."
     ],
 
     .chinese: [
@@ -399,7 +412,20 @@ private let localizationStrings: [AppLanguage: [String: String]] = [
         "cursor(s) from": "个光标，来自",
         "file(s).": "个文件。",
         "Failed to access library directory.": "无法访问库目录。",
-        "Failed to import Windows cursors:": "导入Windows光标失败："
+        "Failed to import Windows cursors:": "导入Windows光标失败：",
+
+        // Cape Validation Errors
+        "Cape validation failed": "Cape验证失败",
+        "This cape does not meet system requirements and cannot be imported.": "此Cape不符合系统要求，无法导入。",
+        "Frame count issues:": "帧数问题：",
+        "%@ has %lu frames (maximum: %lu)": "%@ 有 %lu 帧（最大：%lu）",
+        "Hotspot position issues:": "热点位置问题：",
+        "X coordinate %.1f is negative": "X 坐标 %.1f 为负数",
+        "X coordinate %.1f exceeds width %.1f": "X 坐标 %.1f 超过宽度 %.1f",
+        "Y coordinate %.1f is negative": "Y 坐标 %.1f 为负数",
+        "Y coordinate %.1f exceeds height %.1f": "Y 坐标 %.1f 超过高度 %.1f",
+        "Import failed": "导入失败",
+        "Unable to read the cape file.": "无法读取Cape文件。"
     ]
 ]
 

@@ -44,6 +44,11 @@ extern NSString *const MCLibraryDidSaveNotificationName;
 - (BOOL)writeToFile:(NSString *)file atomically:(BOOL)atomically;
 - (NSError *)save;
 
+/// Validates the cape for system compatibility
+/// Returns nil if valid, or an NSError describing validation failures
+/// Rules: frameCount must be <= 24, hotspot must be within cursor size bounds (0 <= hotspot < size)
+- (NSError *)validateCape;
+
 - (void)updateChangeCount:(NSDocumentChangeType)change;
 - (void)revertToSaved;
 

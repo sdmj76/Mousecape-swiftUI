@@ -7,6 +7,7 @@
 //
 
 #import "MCCursorLibrary.h"
+#import "MCDefs.h"
 
 NSString *const MCLibraryWillSaveNotificationName = @"MCLibraryWillSave";
 NSString *const MCLibraryDidSaveNotificationName = @"MCLibraryDidSave";
@@ -347,8 +348,85 @@ const char MCCursorPropertiesContext;
     }
     
     drep[MCCursorDictionaryCursorsKey] = cursors;
-    
+
     return drep;
+}
+
+/// Validates the cape for system compatibility
+/// Returns nil if valid, or an NSError describing validation failures
+/// Rules: frameCount must be <= 24, hotspot must be within cursor size bounds (0 <= hotspot < size)
+- (NSError *)validateCape {
+    const NSUInteger maxFrameCount = 24;
+    NSMutableArray *frameCountErrors = [NSMutableArray array];
+    NSMutableArray *hotspotErrors = [NSMutableArray array];
+
+    for (MCCursor *cursor in self.cursors) {
+        NSString *cursorName = nameForCursorIdentifier(cursor.identifier);
+
+        // Check frame count
+        if (cursor.frameCount > maxFrameCount) {
+            [frameCountErrors addObject:[NSString stringWithFormat:NSLocalizedString(@"%@ has %lu frames (maximum: %lu)", nil),
+                                        cursorName, (unsigned long)cursor.frameCount, (unsigned long)maxFrameCount]];
+        }
+
+        // Check hotspot bounds
+        // Hotspot must be: 0 <= hotspot < cursor size
+        BOOL hotspotInvalid = NO;
+        NSMutableArray *hotspotDetails = [NSMutableArray array];
+
+        if (cursor.hotSpot.x < 0) {
+            [hotspotDetails addObject:[NSString stringWithFormat:NSLocalizedString(@"X coordinate %.1f is negative", nil), cursor.hotSpot.x]];
+            hotspotInvalid = YES;
+        } else if (cursor.hotSpot.x >= cursor.size.width) {
+            [hotspotDetails addObject:[NSString stringWithFormat:NSLocalizedString(@"X coordinate %.1f exceeds width %.1f", nil),
+                                        cursor.hotSpot.x, cursor.size.width]];
+            hotspotInvalid = YES;
+        }
+
+        if (cursor.hotSpot.y < 0) {
+            [hotspotDetails addObject:[NSString stringWithFormat:NSLocalizedString(@"Y coordinate %.1f is negative", nil), cursor.hotSpot.y]];
+            hotspotInvalid = YES;
+        } else if (cursor.hotSpot.y >= cursor.size.height) {
+            [hotspotDetails addObject:[NSString stringWithFormat:NSLocalizedString(@"Y coordinate %.1f exceeds height %.1f", nil),
+                                        cursor.hotSpot.y, cursor.size.height]];
+            hotspotInvalid = YES;
+        }
+
+        if (hotspotInvalid) {
+            [hotspotErrors addObject:[NSString stringWithFormat:@"%@ (%@)",
+                                      cursorName, [hotspotDetails componentsJoinedByString: @", "]]];
+        }
+    }
+
+    // Build error message if any validation failed
+    if (frameCountErrors.count > 0 || hotspotErrors.count > 0) {
+        NSMutableArray *errorDetails = [NSMutableArray array];
+
+        if (frameCountErrors.count > 0) {
+            [errorDetails addObject:NSLocalizedString(@"Frame count issues:", nil)];
+            [errorDetails addObjectsFromArray:frameCountErrors];
+        }
+
+        if (hotspotErrors.count > 0) {
+            if (errorDetails.count > 0) {
+                [errorDetails addObject:@""]; // Empty line separator
+            }
+            [errorDetails addObject:NSLocalizedString(@"Hotspot position issues:", nil)];
+            [errorDetails addObjectsFromArray:hotspotErrors];
+        }
+
+        NSString *errorMessage = [errorDetails componentsJoinedByString:@"\n"];
+
+        return [NSError errorWithDomain:MCErrorDomain
+                                   code:(frameCountErrors.count > 0) ? MCErrorFrameCountExceededCode : MCErrorHotspotOutOfBoundsCode
+                               userInfo:@{
+            NSLocalizedDescriptionKey: NSLocalizedString(@"Cape validation failed", nil),
+            NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"This cape does not meet system requirements and cannot be imported.", nil),
+            NSLocalizedRecoverySuggestionErrorKey: errorMessage
+        }];
+    }
+
+    return nil; // Valid
 }
 
 - (BOOL)writeToFile:(NSString *)file atomically:(BOOL)atomically {

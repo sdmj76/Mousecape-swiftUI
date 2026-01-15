@@ -159,7 +159,41 @@ final class WindowsCursorConverter: @unchecked Sendable {
     // MARK: - Private Methods
 
     /// Convert a parse result to WindowsCursorResult
+    /// Downsamples to max 24 frames if needed to comply with system limits
     private func convertParseResult(_ parseResult: WindowsCursorParseResult, filename: String) throws -> WindowsCursorResult {
+        let maxFrameCount = 24
+
+        // Check if we need to downsample
+        if parseResult.frameCount > maxFrameCount {
+            print("Windows cursor '\(filename)' has \(parseResult.frameCount) frames, downsampling to \(maxFrameCount)")
+
+            // Downsample the sprite sheet
+            guard let downsampledData = downsampleSpriteSheet(
+                parseResult.image,
+                fromFrameCount: parseResult.frameCount,
+                toFrameCount: maxFrameCount,
+                frameWidth: parseResult.width,
+                frameHeight: parseResult.height
+            ) else {
+                throw WindowsCursorError.imageDecodeFailed
+            }
+
+            // Adjust duration to maintain overall animation timing
+            let adjustedDuration = parseResult.frameDuration * (Double(parseResult.frameCount) / Double(maxFrameCount))
+
+            return WindowsCursorResult(
+                width: parseResult.width,
+                height: parseResult.height,
+                hotspotX: parseResult.hotspotX,
+                hotspotY: parseResult.hotspotY,
+                frameCount: maxFrameCount,
+                frameDuration: adjustedDuration,
+                imageData: downsampledData,
+                filename: filename
+            )
+        }
+
+        // No downsampling needed
         guard let pngData = parseResult.pngData() else {
             throw WindowsCursorError.imageDecodeFailed
         }
@@ -174,6 +208,70 @@ final class WindowsCursorConverter: @unchecked Sendable {
             imageData: pngData,
             filename: filename
         )
+    }
+
+    /// Downsample a sprite sheet by extracting evenly distributed frames
+    /// - Parameters:
+    ///   - spriteSheet: Original sprite sheet CGImage
+    ///   - fromFrameCount: Original number of frames
+    ///   - toFrameCount: Target number of frames
+    ///   - frameWidth: Width of each frame
+    ///   - frameHeight: Height of each frame
+    /// - Returns: Downsampled sprite sheet as PNG data
+    private func downsampleSpriteSheet(_ spriteSheet: CGImage, fromFrameCount: Int, toFrameCount: Int, frameWidth: Int, frameHeight: Int) -> Data? {
+        guard fromFrameCount > toFrameCount else { return nil }
+
+        // Calculate which frames to keep (uniform sampling)
+        let step = Double(fromFrameCount - 1) / Double(toFrameCount - 1)
+        var frameIndices: [Int] = []
+        for i in 0..<toFrameCount {
+            let sourceIndex = Int(round(Double(i) * step))
+            let clampedIndex = min(sourceIndex, fromFrameCount - 1)
+            frameIndices.append(clampedIndex)
+        }
+
+        // Create new sprite sheet with selected frames
+        let newSheetHeight = frameHeight * toFrameCount
+        guard let context = CGContext(
+            data: nil,
+            width: frameWidth,
+            height: newSheetHeight,
+            bitsPerComponent: 8,
+            bytesPerRow: frameWidth * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else {
+            return nil
+        }
+
+        // Clear to transparent
+        context.clear(CGRect(x: 0, y: 0, width: frameWidth, height: newSheetHeight))
+
+        // Draw selected frames
+        for (destIndex, sourceIndex) in frameIndices.enumerated() {
+            let srcY = sourceIndex * frameHeight
+            let dstY = destIndex * frameHeight
+
+            if let croppedFrame = spriteSheet.cropping(to: CGRect(x: 0, y: srcY, width: frameWidth, height: frameHeight)) {
+                context.draw(croppedFrame, in: CGRect(x: 0, y: dstY, width: frameWidth, height: frameHeight))
+            }
+        }
+
+        guard let newCGImage = context.makeImage() else { return nil }
+        return cgImageToPNG(newCGImage)
+    }
+
+    /// Convert CGImage to PNG data
+    private func cgImageToPNG(_ image: CGImage) -> Data? {
+        let mutableData = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(mutableData, "public.png" as CFString, 1, nil) else {
+            return nil
+        }
+        CGImageDestinationAddImage(destination, image, nil)
+        guard CGImageDestinationFinalize(destination) else {
+            return nil
+        }
+        return mutableData as Data
     }
 }
 

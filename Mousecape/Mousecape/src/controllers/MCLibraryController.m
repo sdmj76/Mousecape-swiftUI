@@ -71,21 +71,37 @@
     [self.undoManager enableUndoRegistration];
 }
 
-- (void)importCapeAtURL:(NSURL *)url {
-    [self importCape:[MCCursorLibrary cursorLibraryWithContentsOfURL:url]];
+- (NSError *)importCapeAtURL:(NSURL *)url {
+    MCCursorLibrary *lib = [MCCursorLibrary cursorLibraryWithContentsOfURL:url];
+    if (!lib) {
+        return [NSError errorWithDomain:MCErrorDomain
+                                   code:MCErrorInvalidFormatCode
+                               userInfo:@{
+            NSLocalizedDescriptionKey: NSLocalizedString(@"Import failed", nil),
+            NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Unable to read the cape file.", nil)
+        }];
+    }
+    return [self importCape:lib];
 }
 
-- (void)importCape:(MCCursorLibrary *)lib {
+- (NSError *)importCape:(MCCursorLibrary *)lib {
+    // Validate the cape before importing
+    NSError *validationError = [lib validateCape];
+    if (validationError) {
+        return validationError; // Return validation error to caller
+    }
+
     if ([[self.capes valueForKeyPath:@"identifier"] containsObject:lib.identifier]) {
         lib.identifier = [lib.identifier stringByAppendingFormat:@".%@", UUID()];
     }
 
     lib.fileURL = [self URLForCape:lib];
     [lib writeToFile:lib.fileURL.path atomically:NO];
-    
-    [self addCape:lib];
-}
 
+    [self addCape:lib];
+
+    return nil; // Success
+}
 
 - (void)addCape:(MCCursorLibrary *)cape {
     if ([self.capes containsObject:cape] || [[self.capes valueForKeyPath:@"identifier"] containsObject:cape.identifier]) {

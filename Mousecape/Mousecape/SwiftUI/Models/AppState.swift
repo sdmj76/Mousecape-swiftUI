@@ -255,8 +255,20 @@ final class AppState: @unchecked Sendable {
     }
 
     private func importCapeFromURL(_ url: URL) {
-        libraryController?.importCape(at: url)
-        loadCapes() // Reload to get the new cape
+        guard let libraryController = libraryController else { return }
+
+        let error = libraryController.importCape(at: url)
+        if let error = error as NSError? {
+            // Import failed due to validation
+            validationErrorMessage = error.localizedDescription
+            if let recoverySuggestion = error.localizedRecoverySuggestion {
+                validationErrorMessage += "\n\n\(recoverySuggestion)"
+            }
+            showValidationError = true
+        } else {
+            // Import succeeded, reload the cape list
+            loadCapes()
+        }
     }
 
     /// Add a cape to the library
@@ -495,6 +507,16 @@ final class AppState: @unchecked Sendable {
 
     /// Export a cape to file
     func exportCape(_ cape: CursorLibrary, to url: URL? = nil) {
+        // Validate cape before export
+        if let error = cape.underlyingLibrary.validateCape() as NSError? {
+            validationErrorMessage = error.localizedDescription
+            if let recoverySuggestion = error.localizedRecoverySuggestion {
+                validationErrorMessage += "\n\n\(recoverySuggestion)"
+            }
+            showValidationError = true
+            return
+        }
+
         if let url = url {
             exportCapeToURL(cape, url: url)
         } else {

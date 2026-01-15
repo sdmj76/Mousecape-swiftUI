@@ -16,8 +16,8 @@
 
 - (instancetype)initWithURL:(NSURL *)url;
 
-- (void)importCapeAtURL:(NSURL *)url;
-- (void)importCape:(MCCursorLibrary *)cape;
+- (NSError *)importCapeAtURL:(NSURL *)url;
+- (NSError *)importCape:(MCCursorLibrary *)cape;
 
 - (void)addCape:(MCCursorLibrary *)cape;
 - (void)removeCape:(MCCursorLibrary *)cape;

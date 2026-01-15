@@ -41,9 +41,13 @@ extern NSDictionary *cursorNameMap;
 typedef NS_ENUM(NSInteger, MCErrorCode) {
     MCErrorInvalidCapeCode = -1,
     MCErrorWriteFailCode   = -2,
-    
+
     MCErrorInvalidFormatCode = -100,
-    MCErrorMultipleCursorIdentifiersCode = -101
+    MCErrorMultipleCursorIdentifiersCode = -101,
+
+    // Validation errors
+    MCErrorFrameCountExceededCode = -200,    // Frame count exceeds 24
+    MCErrorHotspotOutOfBoundsCode = -201     // Hotspot position out of cursor bounds
 };
 
 extern const CGFloat   MCCursorCreatorVersion;

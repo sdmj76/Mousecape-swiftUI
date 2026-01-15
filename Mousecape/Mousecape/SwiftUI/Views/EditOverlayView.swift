@@ -1103,6 +1103,18 @@ struct CursorPreviewDropZone: View {
             return false
         }
 
+        // Downsample frames to maximum 24 if needed (system limit)
+        let maxFrameCount = 24
+        let originalFrameCount = frames.count
+        if frames.count > maxFrameCount {
+            let downsampledFrames = downsampleFrames(frames, targetCount: maxFrameCount)
+            print("GIF downsampled: \(originalFrameCount) → \(downsampledFrames.count) frames")
+            frames = downsampledFrames
+            // Adjust duration to maintain overall animation timing
+            let durationMultiplier = Double(originalFrameCount) / Double(maxFrameCount)
+            totalDuration *= durationMultiplier
+        }
+
         // Calculate average frame duration
         let avgFrameDuration = totalDuration / Double(frames.count)
 
@@ -1129,6 +1141,23 @@ struct CursorPreviewDropZone: View {
 
         print("Animated GIF imported: \(frameWidth)x\(frameHeight), \(frames.count) frames, \(String(format: "%.3f", avgFrameDuration))s/frame")
         return true
+    }
+
+    /// Downsample frames to target count using uniform sampling
+    /// This preserves animation timing by evenly distributing frames
+    private func downsampleFrames(_ frames: [NSBitmapImageRep], targetCount: Int) -> [NSBitmapImageRep] {
+        guard frames.count > targetCount else { return frames }
+
+        var result: [NSBitmapImageRep] = []
+        let step = Double(frames.count - 1) / Double(targetCount - 1)
+
+        for i in 0..<targetCount {
+            let sourceIndex = Int(round(Double(i) * step))
+            let clampedIndex = min(sourceIndex, frames.count - 1)
+            result.append(frames[clampedIndex])
+        }
+
+        return result
     }
 
     /// Create a vertical sprite sheet from individual frames
@@ -1320,6 +1349,7 @@ struct CursorPreviewDropZone: View {
             }
 
             // For animated cursors, set frame count and duration
+            // (downsampling already handled by WindowsCursorConverter if needed)
             if result.frameCount > 1 {
                 cursor.frameCount = result.frameCount
                 cursor.frameDuration = result.frameDuration
