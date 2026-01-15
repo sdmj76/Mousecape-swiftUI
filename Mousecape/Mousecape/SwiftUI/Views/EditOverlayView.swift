@@ -551,11 +551,15 @@ struct CursorDetailView: View {
 
     // MARK: - Validation
 
-    /// Check if hotspot X is valid (>= 0)
-    private var isHotspotXValid: Bool { hotspotX >= 0 }
+    /// Maximum allowed hotspot value (32x32 cursor, hot spot must be < size)
+    /// Use same value as in loadWindowsCursor to ensure consistency
+    private let maxHotspot = 31.99
 
-    /// Check if hotspot Y is valid (>= 0)
-    private var isHotspotYValid: Bool { hotspotY >= 0 }
+    /// Check if hotspot X is valid (0 <= x < 32)
+    private var isHotspotXValid: Bool { hotspotX >= 0 && hotspotX < maxHotspot }
+
+    /// Check if hotspot Y is valid (0 <= y < 32)
+    private var isHotspotYValid: Bool { hotspotY >= 0 && hotspotY < maxHotspot }
 
     /// Check if frame count is valid (>= 1)
     private var isFrameCountValid: Bool { frameCount >= 1 }
@@ -661,9 +665,17 @@ struct CursorDetailView: View {
                                     .onChange(of: hotspotX) { oldValue, newValue in
                                         guard !isLoadingValues else { return }
                                         guard newValue != oldValue else { return }
+
+                                        // Validate: must be in range [0, 32)
+                                        let clamped = min(max(0, newValue), maxHotspot)
+                                        if clamped != newValue {
+                                            // Invalid input, revert to old value
+                                            hotspotX = oldValue
+                                            return
+                                        }
+
                                         let capturedOld = oldValue
-                                        let actualNew = max(0, newValue)
-                                        cursor.hotSpot = NSPoint(x: CGFloat(actualNew), y: cursor.hotSpot.y)
+                                        cursor.hotSpot = NSPoint(x: CGFloat(clamped), y: cursor.hotSpot.y)
                                         previewRefreshTrigger += 1
                                         appState.registerUndo(
                                             undo: { [weak cursor] in
@@ -672,8 +684,8 @@ struct CursorDetailView: View {
                                                 self.previewRefreshTrigger += 1
                                             },
                                             redo: { [weak cursor] in
-                                                cursor?.hotSpot = NSPoint(x: CGFloat(actualNew), y: cursor?.hotSpot.y ?? 0)
-                                                self.hotspotX = actualNew
+                                                cursor?.hotSpot = NSPoint(x: CGFloat(clamped), y: cursor?.hotSpot.y ?? 0)
+                                                self.hotspotX = clamped
                                                 self.previewRefreshTrigger += 1
                                             }
                                         )
@@ -691,9 +703,17 @@ struct CursorDetailView: View {
                                     .onChange(of: hotspotY) { oldValue, newValue in
                                         guard !isLoadingValues else { return }
                                         guard newValue != oldValue else { return }
+
+                                        // Validate: must be in range [0, 32)
+                                        let clamped = min(max(0, newValue), maxHotspot)
+                                        if clamped != newValue {
+                                            // Invalid input, revert to old value
+                                            hotspotY = oldValue
+                                            return
+                                        }
+
                                         let capturedOld = oldValue
-                                        let actualNew = max(0, newValue)
-                                        cursor.hotSpot = NSPoint(x: cursor.hotSpot.x, y: CGFloat(actualNew))
+                                        cursor.hotSpot = NSPoint(x: cursor.hotSpot.x, y: CGFloat(clamped))
                                         previewRefreshTrigger += 1
                                         appState.registerUndo(
                                             undo: { [weak cursor] in
@@ -702,8 +722,8 @@ struct CursorDetailView: View {
                                                 self.previewRefreshTrigger += 1
                                             },
                                             redo: { [weak cursor] in
-                                                cursor?.hotSpot = NSPoint(x: cursor?.hotSpot.x ?? 0, y: CGFloat(actualNew))
-                                                self.hotspotY = actualNew
+                                                cursor?.hotSpot = NSPoint(x: cursor?.hotSpot.x ?? 0, y: CGFloat(clamped))
+                                                self.hotspotY = clamped
                                                 self.previewRefreshTrigger += 1
                                             }
                                         )
@@ -1323,15 +1343,26 @@ struct CursorPreviewDropZone: View {
             let scaledWidth = originalWidth * scale
             let scaledHeight = singleFrameHeight * scale
 
-            // Offset for centering
+            // Offset for centering (in pixels)
             let offsetX = (targetSizeF - scaledWidth) / 2
             let offsetY = (targetSizeF - scaledHeight) / 2
 
-            // Scale hotspot proportionally and add offset
-            let scaledHotspotX = CGFloat(result.hotspotX) * scale + offsetX
-            let scaledHotspotY = CGFloat(result.hotspotY) * scale + offsetY
+            // Scale hotspot proportionally (in pixels)
+            let scaledHotspotXPixels = CGFloat(result.hotspotX) * scale + offsetX
+            let scaledHotspotYPixels = CGFloat(result.hotspotY) * scale + offsetY
 
-            // Set hotspot (scaled and centered)
+            // Convert from pixels to points (divide by 2 for 2x HiDPI)
+            // This is the KEY fix: hotspot is in points, not pixels
+            var scaledHotspotX = scaledHotspotXPixels / 2.0
+            var scaledHotspotY = scaledHotspotYPixels / 2.0
+
+            // Clamp hotspot to valid range [0, 32) - must be within cursor size
+            // This prevents CGSRegisterCursorWithImages from failing with CGError=1000
+            let maxHotspot: CGFloat = 31.99  // Just under 32 to stay within bounds
+            scaledHotspotX = min(max(0, scaledHotspotX), maxHotspot)
+            scaledHotspotY = min(max(0, scaledHotspotY), maxHotspot)
+
+            // Set hotspot (in points)
             cursor.hotSpot = NSPoint(x: scaledHotspotX, y: scaledHotspotY)
 
             // Set size to 32x32 points (since we use 2x scale, same as PNG import)
