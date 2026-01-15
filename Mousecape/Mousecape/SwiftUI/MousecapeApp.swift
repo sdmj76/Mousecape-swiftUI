@@ -225,6 +225,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return true
     }
+
+    // Close ObjC logging system on exit
+    func applicationWillTerminate(_ notification: Notification) {
+        MCLoggerClose()
+    }
 }
 
 // MARK: - Window Delegate (handles close confirmation)

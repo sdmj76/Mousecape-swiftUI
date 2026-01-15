@@ -144,10 +144,93 @@ Cape 是二进制 plist 文件（`.cape` 扩展名），包含：
 
 IBeam（文本光标）也有替代名称。守护进程会处理这些变体。
 
-## 调试
+## 日志系统
 
-- `MMLog()` 宏用于彩色控制台输出（定义在 mousecloak 中）
-- 构建变体：Debug、Release
+项目包含完整的调试日志系统，仅在 DEBUG 构建中激活。
+
+### 日志文件位置
+
+```
+~/Library/Logs/Mousecape/
+├── mousecape_gui_YYYY-MM-DD_HH-MM-SS.log    # SwiftUI GUI 日志
+└── mousecloak_YYYY-MM-DD_HH-MM-SS.log       # CLI 工具日志
+```
+
+日志文件自动清理：保留最近 24 小时的日志。
+
+### 查看日志
+
+```bash
+# 查看最近 2 分钟的系统日志
+log show --predicate 'process contains "mousecloak"' --last 2m
+
+# 查看日志文件
+ls -la ~/Library/Logs/Mousecape/
+cat ~/Library/Logs/Mousecape/mousecloak_*.log
+```
+
+### Objective-C 日志（mousecloak/）
+
+**核心文件：**
+- `MCLogger.h` / `MCLogger.m` - 日志系统实现
+- `MCDefs.h` - 定义 `MMLog()` 宏
+
+**API：**
+```objc
+MCLoggerInit();                    // 初始化日志系统，创建日志文件
+MCLoggerWrite("format %s", arg);   // 写入日志（同时输出到 stdout 和文件）
+MCLoggerGetLogPath();              // 获取当前日志文件路径
+MCLoggerClose();                   // 关闭日志文件
+
+// 便捷宏
+MMLog("message");                  // 自动换行的日志输出
+MMOut("format", arg);              // 不换行的输出（用于进度显示）
+```
+
+**颜色输出（用于终端）：**
+```objc
+MMLog(GREEN "成功" RESET);
+MMLog(RED "错误" RESET);
+MMLog(YELLOW "警告" RESET);
+// 可用颜色：RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, BOLD, RESET
+```
+
+**在 Release 构建中：**
+- `MCLoggerInit/Write/Close` 变为空操作
+- `MMLog/MMOut` 仅输出到 stdout，不写文件
+
+### Swift 日志（SwiftUI/Utilities/）
+
+**核心文件：** `DebugLogger.swift`
+
+**API：**
+```swift
+// 全局便捷函数
+debugLog("消息")                    // 记录调试信息（仅 DEBUG 有效）
+
+// 单例访问
+DebugLogger.shared.log("消息")     // 直接调用
+DebugLogger.getAllLogFiles()       // 获取所有日志文件
+DebugLogger.exportLogsAsZip()      // 导出日志为 zip（用于问题报告）
+DebugLogger.getTotalLogSize()      // 获取日志总大小
+DebugLogger.clearAllLogs()         // 清除所有日志
+```
+
+**日志格式：**
+```
+[HH:mm:ss.SSS] [FileName.swift:42] 消息内容
+```
+
+### 日志头信息
+
+每个日志文件开头自动记录：
+- 时间、macOS 版本、用户名、进程信息
+- 用户偏好设置（MCAppliedCursor、MCCursorScale 等）
+
+### 构建变体
+
+- **Debug** / **Debug-Dev**：启用完整日志，写入文件
+- **Release** / **Release-Dev**：禁用文件日志，仅 stdout 输出
 
 ## CI/CD
 

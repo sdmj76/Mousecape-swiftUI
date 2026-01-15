@@ -23,4 +23,9 @@
 // Scale utilities (private CoreGraphics API)
 #import "scale.h"
 
+// Logging system (only in DEBUG builds)
+#ifdef DEBUG
+#import "MCLogger.h"
+#endif
+
 #endif /* Mousecape_Bridging_Header_h */

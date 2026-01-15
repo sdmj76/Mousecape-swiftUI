@@ -10,6 +10,7 @@
 #import "apply.h"
 #import "restore.h"
 #import "create.h"
+#import "MCLogger.h"
 
 @interface MCLibraryController ()
 @property (nonatomic, readwrite, strong) NSUndoManager *undoManager;
@@ -28,13 +29,19 @@
 
 - (instancetype)initWithURL:(NSURL *)url {
     if ((self = [self init])) {
+#ifdef DEBUG
+        // Initialize ObjC logging system (for MMLog and stderr capture)
+        // This ensures CGError and other system errors are logged to file
+        MCLoggerInit();
+#endif
+
         self.libraryURL = url;
         self.undoManager = [[NSUndoManager alloc] init];
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willSaveNotification:) name:MCLibraryWillSaveNotificationName object:nil];
         [self loadLibrary];
     }
-    
+
     return self;
 }
 
