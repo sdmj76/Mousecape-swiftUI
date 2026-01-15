@@ -718,23 +718,22 @@ final class AppState: @unchecked Sendable {
         isLoading = true
         loadingMessage = LocalizationManager.shared.localized("Importing Windows cursors...")
 
-        do {
-            // Check for install.inf first
-            if let infURL = WindowsINFParser.findINF(in: folderURL),
-               let infMapping = WindowsINFParser.parse(url: infURL) {
-                // Use INF-based import
-                await processWithINFMapping(folderURL: folderURL, infMapping: infMapping)
-            } else {
-                // Fallback to filename-based import
-                await processWithFilenameMapping(folderURL: folderURL)
-            }
+        // Check for valid INF with [Scheme.Reg] section
+        switch WindowsINFParser.findValidINF(in: folderURL) {
+        case .success(let infMapping):
+            // Use INF-based import (position-based mapping)
+            await processWithINFMapping(folderURL: folderURL, infMapping: infMapping)
+        case .failure(let error):
+            // Show INF parsing error and fallback to filename-based import
+            print("INF parsing failed: \(error.localizedDescription), using filename mapping")
+            await processWithFilenameMapping(folderURL: folderURL)
         }
     }
 
     /// Generic scheme names that should be ignored in favor of folder name
     private let genericSchemeNames: Set<String> = ["default", "untitled", "cursor", "cursors", "scheme"]
 
-    /// Process Windows cursors using INF mapping
+    /// Process Windows cursors using INF mapping (position-based)
     private func processWithINFMapping(folderURL: URL, infMapping: WindowsINFMapping) async {
         do {
             let results = try await WindowsCursorConverter.shared.convertFolderWithINFAsync(
@@ -765,12 +764,12 @@ final class AppState: @unchecked Sendable {
             var addedCursorTypes: Set<String> = []
 
             var importedCount = 0
-            for (infKey, result) in results {
-                // Get macOS cursor types from INF key
-                let cursorTypes = WindowsINFParser.cursorTypes(for: infKey)
+            for (position, result) in results {
+                // Get macOS cursor types from position index
+                let cursorTypes = WindowsINFParser.cursorTypes(forPosition: position)
 
                 if cursorTypes.isEmpty {
-                    print("Skipping unknown INF key: \(infKey)")
+                    print("Skipping position \(position): no macOS equivalent")
                     continue
                 }
 
@@ -799,7 +798,7 @@ final class AppState: @unchecked Sendable {
                 for cursorType in cursorTypes {
                     // Skip if this cursor type was already added
                     if addedCursorTypes.contains(cursorType.rawValue) {
-                        print("Skipping duplicate cursor type: \(cursorType.rawValue) from \(infKey)")
+                        print("Skipping duplicate cursor type: \(cursorType.rawValue) from position \(position)")
                         continue
                     }
 
